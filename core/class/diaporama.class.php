@@ -529,11 +529,16 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		$imageinfo= getimagesize("$fichiercomplet");
 		$iw=$imageinfo[0];
 		$ih=$imageinfo[1];
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$iw:'.$iw.'->'.$maxWidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$ih:'.$ih.'->'.$maxHeight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
 		# Calcul des rapport de Largeur et de Hauteur
 		$widthscale = $iw/$maxWidth;
 		$heightscale = $ih/$maxHeight;
 		$rapport = $ih/$widthscale;
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$widthscale:'.$widthscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$heightscale:'.$heightscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$rapport:'.$rapport.'('.$ih.'/'.$widthscale.')~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Calul des rapports Largeur et Hauteur à afficher
 		if($rapport < $maxHeight)
 			{$nwidth = $maxWidth;}
@@ -557,10 +562,10 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		
 		
 			$largeurPhoto=$this->getConfiguration('largeurPhoto');
-			$longueurPhoto=$this->getConfiguration('longueurPhoto');
+			$hauteurPhoto=$this->getConfiguration('hauteurPhoto');
 			$arrondiPhoto=$this->getConfiguration('arrondiPhoto');
-			if ($largeurPhoto =="") $largeurPhoto="250px";
-			if ($hauteurPhoto =="") $hauteurPhoto="250px";		
+			if ($largeurPhoto =="") $largeurPhoto="250";
+			if ($hauteurPhoto =="") $hauteurPhoto="250";		
 			if ($arrondiPhoto =="") $arrondiPhoto="30%";		
 			$tirageSort="999";//999 pour boucler dans tirageSort
 			$touteslesValeurs= array($tirageSort);
@@ -616,7 +621,8 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		
 			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
 			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' OK');
-			$image='<img class="rien" style="height: '.$hauteurPhoto.';width: '.$largeurPhoto.';border-radius: '.$arrondiPhoto.';" src="tmp/diaporama_'.$tirageSort.'.jpg" alt="image">';
+			//$image='<img class="rien" style="height: '.$hauteurPhoto.';width: '.$largeurPhoto.';border-radius: '.$arrondiPhoto.';" src="tmp/diaporama_'.$tirageSort.'.jpg" alt="image">';
+			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto);
 			$this->checkAndUpdateCmd('photo'.$i, $image);			
 			}
 		}
