@@ -548,7 +548,12 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			{$nheight = $rapport;}
 		 else
 			{$nheight = $maxHeight;}
-		return '<img class="rien" style="height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nwidth:'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nheight:'.$nheight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//$nheight="20";
+		//$nwidth="50";
+		
+		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
 	} else {
 		log::add('diaporama', 'debug', '**********************file_exists PAS:'.$fichiercomplet.'***********************************');
 		return "Le fichier $fichiercomplet n'existe pas.";
@@ -593,13 +598,14 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			$file = $diapo[$tirageSort];
 			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
 			log::add('diaporama', 'debug', '**********************file:'.$file.'***********************************');
-			self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
-			
-			// ici faut trouver les propriétés de l'image
-			
-			//$image='<img class="rien" style="height: '.$hauteurPhoto.';width: '.$largeurPhoto.';border-radius: '.$arrondiPhoto.';" src="tmp/diaporama_'.$tirageSort.'.jpg" alt="image">';
-			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto);
-			$this->checkAndUpdateCmd('photo'.$i, $image);			
+			try {
+				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
+				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto);
+				$this->checkAndUpdateCmd('photo'.$i, $image);			
+			}
+			catch(Exception $exc) {
+				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
+			}			
 			}
 			self::chmod777();
 		}
