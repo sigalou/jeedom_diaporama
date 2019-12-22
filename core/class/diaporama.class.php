@@ -464,8 +464,14 @@ public static function scanLienPhotos($Id) {
 
 public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
 	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
-    $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
-    $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+    $fichier='/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
+    $fichiercomplet='/var/www/html'.$fichier;
+	
+	if (!file_exists($fichiercomplet)) {	
+		$fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+		$fichiercomplet='/var/www/html'.$fichier;
+	}
+
 	if (file_exists($fichiercomplet)) {
 		//log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
 		# Passage des paramètres dans la table : imageinfo
@@ -509,16 +515,11 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 }
 
 public function infosExif($tirageSort, $_indexPhoto, $_device)  {
-	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
     $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
     $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
 	if (file_exists($fichiercomplet)) {
-		//log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
-		# Passage des paramètres dans la table : imageinfo
-		//$imageinfo= getimagesize("$fichiercomplet");
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		//log::add('diaporama', 'debug', '**********************exif[FileDateTime]:'.$exif['FileDateTime'].'***********************************');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
 
 		$intDate=0;
 		if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
@@ -530,20 +531,34 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		
 		$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
 		if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
-	//log::add('diaporama', 'debug', '**********************formatDateHeure:'.$formatDateHeure.'***********************************');
-
-		
-		//if (date("Y-m-d H:i:s", $intDate)) 
-		//$_device->checkAndUpdateCmd('date'.$_indexPhoto, date("F Y", $intDate));
 		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
 		log::add('diaporama', 'debug', '--> Date&Heure récupérés: '.date($formatDateHeure, $intDate));
 		$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['Orientation']);
 		log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['Orientation']);
-		
-		
+		$photoaTraiter = ImageCreateFromJpeg($fichiercomplet);
+    $fichiercompletbis='/var/www/html/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
+    //$fichiercompletbis='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
+		switch ($exif['Orientation']) {
+			case "6":
+				$photoaTraiter2 = imagerotate($photoaTraiter, 270, 0);
+				imagejpeg($photoaTraiter2,$fichiercompletbis);
+		log::add('diaporama', 'debug', '--> TOURNE:90 ');
+				break;
+			case "8":
+				$photoaTraiter2 = imagerotate($photoaTraiter, 90, 0);
+				imagejpeg($photoaTraiter2,$fichiercompletbis);
+		log::add('diaporama', 'debug', '--> TOURNE:-90 ');
+				break;
+			case "3":
+				$photoaTraiter2 = imagerotate($photoaTraiter, 180, 0);
+				imagejpeg($photoaTraiter2,$fichiercompletbis);
+		log::add('diaporama', 'debug', '--> TOURNE:180 ');
+				break;
+		}		
 		// 1 = Pas de rotation
-		// 6 = Rotation 90°
-		// 8 = Rotation -90°
+		// 6 = Rotation 90° OK
+		// 8 = Rotation -90° OK
+		// 3 = Rotation 180° OK
 		
 
 	}
@@ -592,9 +607,9 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 			log::add('diaporama', 'debug', 'Fichier sélectionné au hasard:'.$file.' copié dans '.$this->getConfiguration('dossierSambaDiaporama').' en '.$newfile);
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
+				self::infosExif($tirageSort,$i,$this);
 				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 				$this->checkAndUpdateCmd('photo'.$i, $image);	
-				self::infosExif($tirageSort,$i,$this);
 			}
 			catch(Exception $exc) {
 				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());

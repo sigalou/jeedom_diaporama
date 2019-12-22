@@ -34,7 +34,7 @@ if (!isConnect()) {
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-3 col-xs-12 control-label">{{Case à cocher au cas où}}</label>
+            <label class="col-sm-3 col-xs-12 control-label">{{Retourner automatiquement les photos}}</label>
             <div class="col-sm-3 col-xs-12">
                 <input type="checkbox" class="configKey" data-l1key="foldOnStart" />
             </div>
