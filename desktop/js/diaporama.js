@@ -46,6 +46,36 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=sambaEtat]').on('change', f
 		$('#img_samba').attr("src", 'plugins/diaporama/desktop/images/samba_' + $icon + '.png');
 });
 
+ $('#bt_testLienPhotos').off('click').on('click', function () {
+    scanLienPhotos();
+});
+
+function scanLienPhotos()
+{
+  $.ajax({
+      type: "POST", 
+      url: "plugins/diaporama/core/ajax/diaporama.ajax.php", 
+      data:
+      {
+          action: "scanLienPhotos",
+		  id: $('.eqLogicAttr[data-l1key=id]').value()
+      },
+      dataType: 'json',
+      error: function (request, status, error)
+      {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data)
+      { 
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({message: data.result, level: 'danger'});
+              return;
+          }
+          window.location.reload();
+      }
+  });
+}
+
 
 $('#bt_forcerDefaultCmd').off('click').on('click', function () {
   var dialog_title = '{{Recharge configuration par défaut}}';
@@ -256,30 +286,7 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=type]').on('change', functi
 	}
 });
 
-function scanAmazonAlexa()
-{
-  $.ajax({
-      type: "POST", 
-      url: "plugins/diaporama/core/ajax/diaporama.ajax.php", 
-      data:
-      {
-          action: "scanAmazonAlexa",
-      },
-      dataType: 'json',
-      error: function (request, status, error)
-      {
-          handleAjaxError(request, status, error);
-      },
-      success: function (data)
-      { 
-          if (data.state != 'ok') {
-              $('#div_alert').showAlert({message: data.result, level: 'danger'});
-              return;
-          }
-          window.location.reload();
-      }
-  });
-}
+
 
 $("#table_cmd").sortable({axis: "y", cursor: "move", items: ".cmd", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
 

@@ -125,8 +125,6 @@ foreach($eqLogics as $eqLogic) {
     <a class="btn btn-success eqLogicAction pull-right" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}</a>
     <!-- Bouton Supprimer -->
     <a class="btn btn-danger eqLogicAction pull-right" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}</a>
-     <!-- Bouton configuration par défaut -->
-	<a id="bt_forcerDefaultCmd" class="btn btn-warning pull-right"><i class="fas fa-search"></i> {{Recharger configuration par défaut}}</a>
     <!-- Bouton configuration avancée -->
     <a class="btn btn-default eqLogicAction pull-right" data-action="configure"><i class="fas fa-cogs"></i> {{Configuration avancée}}</a>
    <!-- Liste des onglets -->
@@ -293,7 +291,7 @@ log::add('diaporama', 'debug', "sambaFolder:".$sambaFolder);
 						<div class="form-group">
                   <label class="col-sm-4 control-label"></label>
                   <div class="col-sm-8">
-				<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},500)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos en réseau via Samba}}
+				<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},500)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos sur le réseau via Samba}}
                   </div>
                 </div>
 				
@@ -355,9 +353,21 @@ else
 
 	//if ($eqLogic->getConfiguration('devicetype')!="Smarthome")
 	//{
-?>		
-          <div class="col-sm-6">
-            <form class="form-horizontal">
+		
+		//echo ">>".$eqLogic->getConfiguration('cheminDiaporamaValide');
+		
+?>
+          <div class="col-sm-6 alert-<?php
+		  
+				 if ($eqLogic->getConfiguration('cheminDiaporamaValide')=="ok")
+				  echo "success";
+				elseif ($eqLogic->getConfiguration('cheminDiaporamaValide')=="nok")
+				  echo "danger";		  
+				else
+				  echo "warning";		  
+	  
+		  ?> ">
+            <br><br><form class="form-horizontal">
               <fieldset>
       
 	
@@ -382,10 +392,24 @@ else
                       <span style="position:relative;top:+5px;left:+5px;" class="eqLogicAttr" data-l1key="configuration" data-l2key="nombrePhotos"></span>
                   </div>
                 </div>
-
-
-              </fieldset>
+                <div class="form-group">
+                  <label class="col-sm-4 control-label">{{Dernière mise à jour de l'état du lien}}</label>
+                  <div class="col-sm-8">
+                      <span style="position:relative;top:+5px;" class="eqLogicAttr" data-l1key="configuration" data-l2key="derniereMAJ"></span>
+                  </div>
+                </div><div class="form-group">
+                  <label class="col-sm-4 control-label">{{}}</label>
+                  <div class="col-sm-8">
+                      <span style="position:relative;top:+5px;" class="eqLogicAttr" data-l1key="configuration" data-l2key="cheminDiaporamaMessage"></span>
+                  </div>
+                </div><br><?php
+		  if ($eqLogic->getConfiguration('stockageSamba')=="1")
+			  echo '<center><a id="bt_testLienPhotos" class="btn btn-default pull-center"><i class="far fa-check-circle"></i> {{Tester le lien vers le dossier des photos}}</a></center>';
+             ?> </fieldset>
             </form>
+				
+
+<br>
           </div>
 		  
         </div>
@@ -432,7 +456,6 @@ else
     </div>
   </div>
 </div>
-
 <?php include_file('desktop', 'diaporama', 'js', 'diaporama'); ?>
 <?php include_file('desktop', 'diaporama', 'css', 'diaporama'); ?>
 <?php include_file('core', 'plugin.template', 'js'); ?>

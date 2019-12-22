@@ -372,104 +372,47 @@ class diaporama extends eqLogic {
 	event::add('jeedom::alert', array('level' => 'success', 'page' => 'diaporama', 'message' => __('Mise à jour terminée', __FILE__)));
 	}
 
-	public static function scanAmazonAlexa() {
-		$deamon_info = self::deamon_info();
-		if ($deamon_info['launchable'] != "ok") {
-			event::add('jeedom::alert', array('level' => 'danger', 'page' => 'diaporama', 'message' => __('Cookie Amazon Absent, allez dans la Configuration du plugin', __FILE__),));
-			return;
-		}
-		// --- Mise à jour des Amazon Echo
-		event::add('jeedom::alert', array('level' => 'success', 'page' => 'diaporama', 'message' => __('Scan en cours...', __FILE__),));
-		$json = file_get_contents("http://" . config::byKey('internalAddr') . ":3456/devices");
-		$json = json_decode($json, true);
-		$numDevices = 0;
-		$numNewDevices = 0;
-		foreach ($json as $item) {
-			// Skip the special device named "This Device"
-			if ($item['name'] == 'This Device') continue;
-			// On teste s'il faut créer un autre Device Player
-			if  ((config::byKey('utilisateurMultimedia', 'diaporama',0)!="0") && (in_array("AUDIO_PLAYER",$item['capabilities']))) {
-					// Device PLAYLIST
-					$device = diaporama::byLogicalId($item['serial']."_playlist", 'diaporama');
-					if (!is_object($device)) {
-						$device = self::createNewDevice($item['name']." PlayList", $item['serial']."_playlist");
-						$device->setIsVisible(0);					
-					}
-					// Update device configuration
-					$device->setConfiguration('device', $item['name']);
-					$device->setConfiguration('type', $item['type']);
-					$device->setConfiguration('devicetype', "PlayList");
-					$device->setConfiguration('family', $item['family']);
-					$device->setConfiguration('members', $item['members']);
-					$device->setIsVisible(0);
-					$device->setIsEnable(0);
-					$device->setConfiguration('capabilities', $item['capabilities']);
-					$device->save();
-					$device->setStatus('online', (($item['online'])?true:false));
-					// Device PLAYER
-					$device = diaporama::byLogicalId($item['serial']."_player", 'diaporama');
-						if (!is_object($device)) {
-							$device = self::createNewDevice($item['name']." Player", $item['serial']."_player");
-							$numNewDevices++;
-							$device->setConfiguration('widgetPlayListEnable', 0);
-						}
-					// Update device configuration
-					$device->setConfiguration('device', $item['name']);
-					$device->setConfiguration('type', $item['type']);
-					$device->setConfiguration('devicetype', "Player");
-					$device->setConfiguration('family', $item['family']);
-					$device->setConfiguration('members', $item['members']);
-					$device->setConfiguration('capabilities', $item['capabilities']);
-					$device->save();
-					$device->setStatus('online', (($item['online'])?true:false));
-					$numDevices++;
+public static function scanLienPhotos($Id) {
+
+	$device = eqLogic::byId($Id);
+	if (is_object($device)) {
+		$diapo = array();
+		$device->setConfiguration('localEtat', "nok"); 
+		$sambaShare	= config::byKey('samba::backup::share')	;
+		log::add('diaporama', 'debug', 'sambaShare->>>'.$sambaShare);
+		log::add('diaporama', 'debug', 'dossierSambaDiaporama->>>'.$device->getConfiguration('dossierSambaDiaporama'));
+		$dos=$sambaShare.$device->getConfiguration('dossierSambaDiaporama');
+			try {
+				$nbPhotos=self::lsjpg_count($device->getConfiguration('dossierSambaDiaporama'));
+				$device->setConfiguration('cheminDiaporamaMessage', "");
 			}
-			// Retireve the device (if already registered in Jeedom)
-			$device = diaporama::byLogicalId($item['serial'], 'diaporama');
-			if (!is_object($device)) {
-				$device = self::createNewDevice($item['name'], $item['serial']);
-				//$device->save();
-				$numNewDevices++;
+			catch(Exception $exc) {
+				//log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
+				$device->setConfiguration('cheminDiaporamaMessage', $exc->getMessage());
+				$nbPhotos=0;
+			}		
+		$device->setConfiguration('sambaEtat', "ok"); 
+		log::add('diaporama', 'debug', "sambaEtat:ok");				
+		$device->setConfiguration('cheminDiaporamaComplet', $dos);
+		$device->setConfiguration('nombrePhotos', $nbPhotos);
+		$device->setConfiguration('derniereMAJ', date("d-m-Y H:i:s"));
+			if ($nbPhotos==0) {
+				$device->setConfiguration('cheminDiaporamaValide', "nok");
+				$device->setConfiguration('localEtat', "nok"); 
+				$device->setConfiguration('sambaEtat', "nok"); 
 			}
-			// Update device configuration
-			$device->setConfiguration('device', $item['name']);
-			$device->setConfiguration('type', $item['type']);
-			$device->setConfiguration('devicetype', "Echo");
-			$device->setConfiguration('family', $item['family']);
-			$device->setConfiguration('members', $item['members']);
-			$device->setConfiguration('capabilities', $item['capabilities']);
-			$device->save();
-			$device->setStatus('online', (($item['online'])?true:false)); //SetStatus doit être lancé après Save et Save après inutile
-			$numDevices++;
-		}
-		
-		if (config::byKey('utilisateurSmarthome', 'diaporama',0)!="0") {			
-			// --- Mise à jour des SmartHome Devices
-			$json = file_get_contents("http://" . config::byKey('internalAddr') . ":3456/smarthomeEntities");
-			$json = json_decode($json, true);
-			foreach ($json as $item) {
-				// Retireve the device (if already registered in Jeedom)
-				$device = diaporama::byLogicalId($item['id'], 'diaporama');
-				if (!is_object($device)) {
-					$device = self::createNewDevice($item['displayName'], $item['id']);
-					$numNewDevices++;
-				}
-				// Update device configuration
-				$device->setConfiguration('device', $item['displayName']);
-				//$device->setConfiguration('type', $item['description']); a voir si on utilise ou pas descriotion
-				$device->setConfiguration('type', $item['providerData']['deviceType']);
-				$device->setConfiguration('devicetype', "Smarthome");
-				$device->setConfiguration('family', $item['providerData']['categoryType']);
-				//$device->setConfiguration('members', $item['members']);
-				$device->setConfiguration('capabilities', $item['supportedProperties']);
-				//On va mettre dispo, on traite plus tard.
-				//$device->setStatus('online', (($item['online'])?true:false));
-				$device->save();
-				$device->setStatus('online', 'true');
-				$numDevices++;
+			else {
+				$device->setConfiguration('cheminDiaporamaValide', "ok");
 			}
-		}
-	event::add('jeedom::alert', array('level' => 'success', 'page' => 'diaporama', 'message' => __('Scan terminé. ' . $numDevices . ' équipements mis a jour dont ' . $numNewDevices . " ajouté(s). Appuyez sur F5 si votre écran ne s'est pas actualisé", __FILE__)));
+		$device->save();
+	} else
+	event::add('jeedom::alert', array('level' => 'warning', 'page' => 'diaporama', 'message' => __('Device id:'.$Id.' introuvable', __FILE__)));
+
+
+
+
+
+
 	}
 
 	private static function createNewDevice($deviceName, $deviceSerial) {
@@ -527,18 +470,19 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
 		# Passage des paramètres dans la table : imageinfo
 		$imageinfo= getimagesize("$fichiercomplet");
+		$exif = exif_read_data($fichiercomplet, 'IFD0');
 		$iw=$imageinfo[0];
 		$ih=$imageinfo[1];
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$iw:'.$iw.'->'.$maxWidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$ih:'.$ih.'->'.$maxHeight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$ih:'.$ih.'->'.$maxHeight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
 		# Calcul des rapport de Largeur et de Hauteur
 		$widthscale = $iw/$maxWidth;
 		$heightscale = $ih/$maxHeight;
 		$rapport = $ih/$widthscale;
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$widthscale:'.$widthscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$heightscale:'.$heightscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$rapport:'.$rapport.'('.$ih.'/'.$widthscale.')~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$widthscale:'.$widthscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$heightscale:'.$heightscale.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$rapport:'.$rapport.'('.$ih.'/'.$widthscale.')~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Calul des rapports Largeur et Hauteur à afficher
 		if($rapport < $maxHeight)
 			{$nwidth = $maxWidth;}
@@ -548,8 +492,8 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			{$nheight = $rapport;}
 		 else
 			{$nheight = $maxHeight;}
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nwidth:'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nheight:'.$nheight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nwidth:'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nheight:'.$nheight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		//$nheight="20";
 		//$nwidth="50";
 		
@@ -715,57 +659,7 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 					$cmd->save();	
 	}			
 	
-	/*
-		log::add('diaporama', 'debug', '**********************postSave2 '.$this->getName().'***********************************');
-			
-					// chemin des photos
-				$cmd = $this->getCmd(null, 'cheminDiaporamaValide');
-				if (!is_object($cmd)) {
-					$cmd = new diaporamaCmd();
-					$cmd->setType('info');
-					$cmd->setLogicalId('cheminDiaporamaValide');
-					$cmd->setSubType('binary');
-					$cmd->setEqLogic_id($this->getId());
-					$cmd->setName('cheminDiaporamaValide');
-					$cmd->setIsVisible(1);
-					$cmd->setOrder(79);
-					//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
-					//$cmd->setDisplay('title_disable', 1);
-				}
-				$cmd->save();	
-				
-					// chemin des photos
-				$cmd = $this->getCmd(null, 'cheminDiaporamaComplet');
-				if (!is_object($cmd)) {
-					$cmd = new diaporamaCmd();
-					$cmd->setType('info');
-					$cmd->setLogicalId('cheminDiaporamaComplet');
-					$cmd->setSubType('string');
-					$cmd->setEqLogic_id($this->getId());
-					$cmd->setName('cheminDiaporamaComplet');
-					$cmd->setIsVisible(1);
-					$cmd->setOrder(79);
-					//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
-					//$cmd->setDisplay('title_disable', 1);
-				}
-				$cmd->save();	
-				
-					// nb de photos
-				$cmd = $this->getCmd(null, 'nombrePhotos');
-				if (!is_object($cmd)) {
-					$cmd = new diaporamaCmd();
-					$cmd->setType('info');
-					$cmd->setLogicalId('nombrePhotos');
-					$cmd->setSubType('numeric');
-					$cmd->setEqLogic_id($this->getId());
-					$cmd->setName('nombrePhotos');
-					$cmd->setIsVisible(1);
-					$cmd->setOrder(79);
-					//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
-					//$cmd->setDisplay('title_disable', 1);
-				}
-				$cmd->save();					
-*/
+	
 				//Commande Refresh
 				$createRefreshCmd = true;
 				$refresh = $this->getCmd(null, 'refresh');
@@ -790,22 +684,8 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 				}
 
 
-		event::add('jeedom::alert', array('level' => 'success', 'page' => 'diaporama', 'message' => __('Mise à jour de "'.$this->getName().'"', __FILE__),));
-		$this->refresh(); 
-
-		if ($widgetPlayer) {
-				$device_playlist=str_replace("_player", "", $this->getConfiguration('serial'))."_playlist"; //Nom du device de la playlist
-				// Si la case "Activer le widget Playlist" est cochée, on rend le device _playlist visible sinon on le passe invisible		
-				$eq=eqLogic::byLogicalId($device_playlist,'diaporama');
-						if(is_object($eq)) {
-							$eq->setIsVisible((($this->getConfiguration('widgetPlayListEnable'))?1:0));
-							$eq->setIsEnable((($this->getConfiguration('widgetPlayListEnable'))?1:0));
-							$eq->setObject_id($this->getObject_id()); // Attribue au widget Playlist la même pièce que son Player
-							$eq->save();
-						}
-			}
-
-
+		//event::add('jeedom::alert', array('level' => 'success', 'page' => 'diaporama', 'message' => __('Mise à jour de "'.$this->getName().'"', __FILE__),));
+		//$this->refresh(); 
 
 		$this->setStatus('forceUpdate', false); //dans tous les cas, on repasse forceUpdate à false
 	}
@@ -912,74 +792,36 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 		//usort($return, 'repo_samba::sortByDatetime');
 		return array_reverse($return);
 	}	
-	
-	
-	public function preSave() {
-		
-
-
-$diapo = array();
-$this->setConfiguration('localEtat', "nok"); 
-$this->setConfiguration('sambaEtat', "nok"); 
-	
-
-if ($this->getConfiguration('stockageSamba')==1) {
-	$sambaShare	= config::byKey('samba::backup::share')	;
-	log::add('diaporama', 'debug', 'sambaShare->>>'.$sambaShare);
-	log::add('diaporama', 'debug', 'dossierSambaDiaporama->>>'.$this->getConfiguration('dossierSambaDiaporama'));
-	$dos=$sambaShare.$this->getConfiguration('dossierSambaDiaporama');
-	$nbPhotos=self::lsjpg_count($this->getConfiguration('dossierSambaDiaporama'));
-	$this->setConfiguration('sambaEtat', "ok"); 
-	$this->setConfiguration('cheminDiaporamaComplet', $dos);
-}
-else {
-	$this->setConfiguration('stockageLocal',1); // par défaut
-	$dossierLocal=$this->getConfiguration('cheminDiaporama');
-	if ($dossierLocal =="") $dossierLocal="/../images/"; // par défaut
-//	log::add('diaporama', 'debug', 'dossier programmé->>>'.$dossierLocal);
-	$dos=dirname(__FILE__).$dossierLocal; 
-	$diapo=glob($dos.'*.jpg');
-	$this->setConfiguration('cheminDiaporamaComplet', realpath($dos)); 
-	$this->setConfiguration('localEtat', "ok"); 
-	$nbPhotos=count($diapo);
-}
-
-
-
-
-	//log::add('diaporama', 'debug', 'Liste des photos:'.json_encode($diapo));
-	$this->setConfiguration('nombrePhotos', $nbPhotos);
-if ($nbPhotos==0) {
-	$this->setConfiguration('cheminDiaporamaValide', "nok");
-	$this->setConfiguration('localEtat', "nok"); 
-	$this->setConfiguration('sambaEtat', "nok"); 
-}
-else
-	$this->setConfiguration('cheminDiaporamaValide', "ok");
 
 	
 	
-	/*
-log::add('diaporama', 'debug', "sambaFolder:".$sambaFolder);
-		$return = array();
-		foreach (repo_samba::ls(config::byKey('samba::backup::folder')) as $file) {
-			if (strpos($file['filename'],'.tar.gz') !== false) {
-				$return[] = $file['filename'];
-			}
+public function preSave() {
+	$diapo = array();
+	if ($this->getConfiguration('stockageSamba')!=1) {
+		$this->setConfiguration('sambaEtat', "nok"); 		
+		$this->setConfiguration('stockageLocal',1); // par défaut
+		$dossierLocal=$this->getConfiguration('cheminDiaporama');
+		if ($dossierLocal =="") $dossierLocal="/../images/"; // par défaut
+		$dos=dirname(__FILE__).$dossierLocal; 
+		$diapo=glob($dos.'*.jpg');
+		$this->setConfiguration('cheminDiaporamaComplet', realpath($dos)); 
+		$this->setConfiguration('localEtat', "ok"); 
+		$nbPhotos=count($diapo);
+		$this->setConfiguration('nombrePhotos', $nbPhotos);
+		$this->setConfiguration('derniereMAJ', date("d-m-Y H:i:s"));
+		if ($nbPhotos==0) {
+			$this->setConfiguration('cheminDiaporamaValide', "nok");
+			$this->setConfiguration('localEtat', "nok"); 
 		}
-	*/
-log::add('diaporama', 'debug', "rep:".json_encode($return));	
-	
-	
-	
-	
-	
-	
-	
-	
-		
-		
-	}
+		else
+			$this->setConfiguration('cheminDiaporamaValide', "ok");
+	} else	{
+			/*$this->setConfiguration('cheminDiaporamaValide', "question");
+			$this->setConfiguration('localEtat', "nok"); 
+			$this->setConfiguration('sambaEtat', "nok"); 	
+			$this->setConfiguration('nombrePhotos', "??");*/
+	}			
+}
 
 // https://github.com/NextDom/NextDom/wiki/Ajout-d%27un-template-a-votre-plugin	
 // https://jeedom.github.io/documentation/dev/fr_FR/widget_plugin	
@@ -1022,6 +864,9 @@ log::add('diaporama', 'debug', "rep:".json_encode($return));
 	return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, $typeWidget, 'diaporama')));
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------
 
 class diaporamaCmd extends cmd {
 
