@@ -463,24 +463,13 @@ public static function scanLienPhotos($Id) {
 	}
 
 public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
-	log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
+	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
     $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
     $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
 	if (file_exists($fichiercomplet)) {
-		log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
+		//log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
 		# Passage des paramètres dans la table : imageinfo
 		$imageinfo= getimagesize("$fichiercomplet");
-		$exif = exif_read_data($fichiercomplet, 'EXIF');
-		
-		
-		/*On travaille sur la date :
-		"FileDateTime":1577029867
-		"DateTime":"2019:08:17 17:01:13"
-		"DateTimeOriginal":"2019:08:17 17:01:13"
-		"DateTimeDigitized":"2019:08:17 17:01:13"
-		"GPSDateStamp":"2019:08:17"*/
-		
-		
 		$iw=$imageinfo[0];
 		$ih=$imageinfo[1];
 		# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
@@ -509,8 +498,8 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			$decalage=round(($maxWidth-$nwidth)/2);
 			if ($decalage > 1)
 				$decalerAdroite="position: relative; left: ".$decalage."px;";
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$maxWidth:'.$maxWidth.'->'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$decalage:'.$decalage.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$maxWidth:'.$maxWidth.'->'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '--> Image '.$iw.'x'.$ih.' redimensée en '.$nwidth.'x'.$nheight);
 		}
 		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
 	} else {
@@ -519,25 +508,19 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 	}    
 }
 
-public function affecteInfosExif($tirageSort, $_indexPhoto, $_device)  {
-	log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
+public function infosExif($tirageSort, $_indexPhoto, $_device)  {
+	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
     $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
     $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
 	if (file_exists($fichiercomplet)) {
-		log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
+		//log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
 		# Passage des paramètres dans la table : imageinfo
 		//$imageinfo= getimagesize("$fichiercomplet");
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
-				log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
-	log::add('diaporama', 'debug', '**********************exif[FileDateTime]:'.$exif['FileDateTime'].'***********************************');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '**********************exif[FileDateTime]:'.$exif['FileDateTime'].'***********************************');
 
 		$intDate=0;
-		/*On travaille sur la date :
-		"FileDateTime":1577029867
-		"DateTime":"2019:08:17 17:01:13"
-		"DateTimeOriginal":"2019:08:17 17:01:13"
-		"DateTimeDigitized":"2019:08:17 17:01:13"
-		"GPSDateStamp":"2019:08:17"*/
 		if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
 		elseif (strtotime($exif['DateTimeOriginal'])) $intDate=strtotime($exif['DateTimeOriginal']);
 		elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
@@ -553,6 +536,8 @@ public function affecteInfosExif($tirageSort, $_indexPhoto, $_device)  {
 		//if (date("Y-m-d H:i:s", $intDate)) 
 		//$_device->checkAndUpdateCmd('date'.$_indexPhoto, date("F Y", $intDate));
 		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
+		log::add('diaporama', 'debug', '--> Date/Heure récupérés: '.date($formatDateHeure, $intDate));
+
 	}
 		
 }
@@ -583,7 +568,8 @@ public function affecteInfosExif($tirageSort, $_indexPhoto, $_device)  {
 
 			$diapo=self::jpg_list($this->getConfiguration('dossierSambaDiaporama'));
 			$nbPhotos=count($diapo);
-			log::add('diaporama', 'debug', '**********************nbPhotos:'.$nbPhotos.'***********************************');
+			log::add('diaporama', 'debug', '----------------------------------------------------------------------------');
+			log::add('diaporama', 'debug', 'Dans le dossier '.$dos.', il y a '.$nbPhotos.' photos');
 			//log::add('diaporama', 'debug', '**********************diapo:'.json_encode($diapo).'***********************************');
 			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 			for ($i = 1; $i <= $nbPhotosaGenerer; $i++) {
@@ -595,12 +581,12 @@ public function affecteInfosExif($tirageSort, $_indexPhoto, $_device)  {
 			array_push($touteslesValeurs, $tirageSort);
 			$file = $diapo[$tirageSort];
 			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
-			log::add('diaporama', 'debug', '**********************file:'.$file.'***********************************');
+			log::add('diaporama', 'debug', 'Fichier sélectionné au hasard:'.$file.' copié dans '.$this->getConfiguration('dossierSambaDiaporama').' en '.$newfile);
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
 				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 				$this->checkAndUpdateCmd('photo'.$i, $image);	
-				self::affecteInfosExif($tirageSort,$i,$this);
+				self::infosExif($tirageSort,$i,$this);
 			}
 			catch(Exception $exc) {
 				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
@@ -814,8 +800,8 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 	
 	public static function jpg_list($_dir = '') {
 		$return = array();
-		log::add('diaporama', 'debug', '**********************2***********************************');
-		log::add('diaporama', 'debug', '**********************3'.$_dir.'***********************************');
+		//log::add('diaporama', 'debug', '**********************2***********************************');
+		//log::add('diaporama', 'debug', '**********************3'.$_dir.'***********************************');
 		foreach (self::ls($_dir) as $file) {
 			if (strpos($file['filename'],'.jpg') !== false) {
 				$return[] = $file['filename'];
@@ -825,12 +811,12 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 	}	
 	public static function downloadCore($_dir= '', $_fileOrigine, $_fileDestination) {
 		//$pathinfo = pathinfo($_path);
-		log::add('diaporama', 'debug', '_dir>>>' . $_dir);
+		//log::add('diaporama', 'debug', '_dir>>>' . $_dir);
 		//$cmd = 'cd ' . $_dir . ';';
 		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';get '.$_fileOrigine.' '.$_fileDestination, 'backup');
-		log::add('diaporama', 'debug', 'Commande>>>get '.$_fileOrigine.' '.$_fileDestination);
+		//log::add('diaporama', 'debug', 'Commande>>>get '.$_fileOrigine.' '.$_fileDestination);
 		com_shell::execute($cmd);
-		log::add('diaporama', 'debug', 'get fait');
+		//log::add('diaporama', 'debug', 'get fait');
 		return;
 	}
 	
