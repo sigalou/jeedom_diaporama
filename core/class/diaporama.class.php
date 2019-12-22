@@ -462,7 +462,7 @@ public static function scanLienPhotos($Id) {
 		return true;
 	}
 
-public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto)  {
+public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
 	log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
     $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
     $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
@@ -474,7 +474,6 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		$iw=$imageinfo[0];
 		$ih=$imageinfo[1];
 		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$ih:'.$ih.'->'.$maxHeight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
 		# Calcul des rapport de Largeur et de Hauteur
 		$widthscale = $iw/$maxWidth;
@@ -493,11 +492,18 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		 else
 			{$nheight = $maxHeight;}
 		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nwidth:'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
-		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$nheight:'.$nheight.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		//$nheight="20";
 		//$nwidth="50";
-		
-		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
+		$decalerAdroite="";
+		if ($centrerLargeur) {
+			$decalage=round(($maxWidth-$nwidth)/2);
+			if ($decalage > 1)
+				$decalerAdroite="position: relative; left: ".$decalage."px;";
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$maxWidth:'.$maxWidth.'->'.$nwidth.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$decalage:'.$decalage.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		}
+		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
 	} else {
 		log::add('diaporama', 'debug', '**********************file_exists PAS:'.$fichiercomplet.'***********************************');
 		return "Le fichier $fichiercomplet n'existe pas.";
@@ -519,13 +525,15 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			$tirageSort="999";//999 pour boucler dans tirageSort
 			$touteslesValeurs= array($tirageSort);
 			$nbPhotosaGenerer=$this->getConfiguration('nbPhotosaGenerer');
+			$centrerLargeur=$this->getConfiguration('centrerLargeur');
+			//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		
 		
 		if ($this->getConfiguration('stockageSamba')==1) {
 			
 			$sambaShare	= config::byKey('samba::backup::share')	;
 			$dos=$sambaShare.$this->getConfiguration('dossierSambaDiaporama');
-			log::add('diaporama', 'debug', '**********************1***********************************');
+			//log::add('diaporama', 'debug', '**********************1***********************************');
 
 			$diapo=self::jpg_list($this->getConfiguration('dossierSambaDiaporama'));
 			$nbPhotos=count($diapo);
@@ -544,7 +552,7 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			log::add('diaporama', 'debug', '**********************file:'.$file.'***********************************');
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
-				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto);
+				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 				$this->checkAndUpdateCmd('photo'.$i, $image);			
 			}
 			catch(Exception $exc) {
@@ -572,7 +580,7 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
 			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' OK');
 			//$image='<img class="rien" style="height: '.$hauteurPhoto.';width: '.$largeurPhoto.';border-radius: '.$arrondiPhoto.';" src="tmp/diaporama_'.$tirageSort.'.jpg" alt="image">';
-			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto);
+			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 			$this->checkAndUpdateCmd('photo'.$i, $image);			
 			}
 		}
