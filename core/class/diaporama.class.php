@@ -470,10 +470,19 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
 		# Passage des paramètres dans la table : imageinfo
 		$imageinfo= getimagesize("$fichiercomplet");
-		$exif = exif_read_data($fichiercomplet, 'IFD0');
+		$exif = exif_read_data($fichiercomplet, 'EXIF');
+		
+		
+		/*On travaille sur la date :
+		"FileDateTime":1577029867
+		"DateTime":"2019:08:17 17:01:13"
+		"DateTimeOriginal":"2019:08:17 17:01:13"
+		"DateTimeDigitized":"2019:08:17 17:01:13"
+		"GPSDateStamp":"2019:08:17"*/
+		
+		
 		$iw=$imageinfo[0];
 		$ih=$imageinfo[1];
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
 		# Calcul des rapport de Largeur et de Hauteur
 		$widthscale = $iw/$maxWidth;
@@ -510,6 +519,43 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 	}    
 }
 
+public function affecteInfosExif($tirageSort, $_indexPhoto, $_device)  {
+	log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
+    $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
+    $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+	if (file_exists($fichiercomplet)) {
+		log::add('diaporama', 'debug', '**********************file_exists:'.$fichiercomplet.'***********************************');
+		# Passage des paramètres dans la table : imageinfo
+		//$imageinfo= getimagesize("$fichiercomplet");
+		$exif = exif_read_data($fichiercomplet, 'EXIF');
+				log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+	log::add('diaporama', 'debug', '**********************exif[FileDateTime]:'.$exif['FileDateTime'].'***********************************');
+
+		$intDate=0;
+		/*On travaille sur la date :
+		"FileDateTime":1577029867
+		"DateTime":"2019:08:17 17:01:13"
+		"DateTimeOriginal":"2019:08:17 17:01:13"
+		"DateTimeDigitized":"2019:08:17 17:01:13"
+		"GPSDateStamp":"2019:08:17"*/
+		if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
+		elseif (strtotime($exif['DateTimeOriginal'])) $intDate=strtotime($exif['DateTimeOriginal']);
+		elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
+		elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
+		elseif (strtotime($exif['GPSDateStamp'])) $intDate=strtotime($exif['GPSDateStamp']);
+		else $intDate=$exif['FileDateTime'];
+
+		$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
+		if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+	//log::add('diaporama', 'debug', '**********************formatDateHeure:'.$formatDateHeure.'***********************************');
+
+		
+		//if (date("Y-m-d H:i:s", $intDate)) 
+		//$_device->checkAndUpdateCmd('date'.$_indexPhoto, date("F Y", $intDate));
+		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
+	}
+		
+}
 
 	public function refresh() {
 		
@@ -553,7 +599,8 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
 				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
-				$this->checkAndUpdateCmd('photo'.$i, $image);			
+				$this->checkAndUpdateCmd('photo'.$i, $image);	
+				self::affecteInfosExif($tirageSort,$i,$this);
 			}
 			catch(Exception $exc) {
 				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
@@ -660,12 +707,25 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Photo '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i);
+						$cmd->setOrder($i*2);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
 					$cmd->save();	
-	}			
+					$cmd = $this->getCmd(null, 'date'.$i);
+					if (!is_object($cmd)) {
+						$cmd = new diaporamaCmd();
+						$cmd->setType('info');
+						$cmd->setLogicalId('date'.$i);
+						$cmd->setSubType('string');
+						$cmd->setEqLogic_id($this->getId());
+						$cmd->setName('Date '.$i);
+						$cmd->setIsVisible(1);
+						$cmd->setOrder($i*2+1);
+						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+						$cmd->setDisplay('title_disable', 1);
+					}
+					$cmd->save();		}			
 	
 	
 				//Commande Refresh
