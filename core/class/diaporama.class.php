@@ -484,7 +484,7 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 		if($rapport < $maxHeight)
 			{$nwidth = $maxWidth;}
 		 else
-			{$nwidth = $iw/$heightscale;}
+			{$nwidth = round($iw/$heightscale);}
 		 if($rapport < $maxHeight)
 			{$nheight = $rapport;}
 		 else
@@ -517,7 +517,7 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		# Passage des paramètres dans la table : imageinfo
 		//$imageinfo= getimagesize("$fichiercomplet");
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
-		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		//log::add('diaporama', 'debug', '**********************exif[FileDateTime]:'.$exif['FileDateTime'].'***********************************');
 
 		$intDate=0;
@@ -527,7 +527,7 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
 		elseif (strtotime($exif['GPSDateStamp'])) $intDate=strtotime($exif['GPSDateStamp']);
 		else $intDate=$exif['FileDateTime'];
-
+		
 		$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
 		if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
 	//log::add('diaporama', 'debug', '**********************formatDateHeure:'.$formatDateHeure.'***********************************');
@@ -536,7 +536,15 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		//if (date("Y-m-d H:i:s", $intDate)) 
 		//$_device->checkAndUpdateCmd('date'.$_indexPhoto, date("F Y", $intDate));
 		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
-		log::add('diaporama', 'debug', '--> Date/Heure récupérés: '.date($formatDateHeure, $intDate));
+		log::add('diaporama', 'debug', '--> Date&Heure récupérés: '.date($formatDateHeure, $intDate));
+		$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['Orientation']);
+		log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['Orientation']);
+		
+		
+		// 1 = Pas de rotation
+		// 6 = Rotation 90°
+		// 8 = Rotation -90°
+		
 
 	}
 		
@@ -693,7 +701,7 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Photo '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*2);
+						$cmd->setOrder($i*3);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -707,11 +715,30 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Date '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*2+1);
+						$cmd->setOrder($i*3+1);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
-					$cmd->save();		}			
+					$cmd->save();		
+					$cmd = $this->getCmd(null, 'orientation'.$i);
+					if (!is_object($cmd)) {
+						$cmd = new diaporamaCmd();
+						$cmd->setType('info');
+						$cmd->setLogicalId('orientation'.$i);
+						$cmd->setSubType('string');
+						$cmd->setEqLogic_id($this->getId());
+						$cmd->setName('Orientation '.$i);
+						$cmd->setIsVisible(1);
+						$cmd->setOrder($i*3+2);
+						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+						$cmd->setDisplay('title_disable', 1);
+					}
+					$cmd->save();						
+					
+					
+					
+					
+					}			
 	
 	
 				//Commande Refresh
