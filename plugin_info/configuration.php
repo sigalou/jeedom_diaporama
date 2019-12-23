@@ -36,7 +36,7 @@ if (!isConnect()) {
         <div class="form-group">
             <label class="col-sm-3 col-xs-12 control-label">{{Retourner automatiquement les photos}}</label>
             <div class="col-sm-3 col-xs-12">
-                <input type="checkbox" class="configKey" data-l1key="foldOnStart" />
+                <input type="checkbox" class="configKey" data-l1key="rotate" />
             </div>
         </div>
     </fieldset>

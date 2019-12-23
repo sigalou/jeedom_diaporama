@@ -515,11 +515,12 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 }
 
 public function infosExif($tirageSort, $_indexPhoto, $_device)  {
-    $fichiercomplet='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
     $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+    $fichiercomplet='/var/www/html'.$fichier;
+    $fichiercompletRotate='/var/www/html/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
 	if (file_exists($fichiercomplet)) {
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
-		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
 
 		$intDate=0;
 		if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
@@ -533,36 +534,69 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
 		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
 		log::add('diaporama', 'debug', '--> Date&Heure récupérés: '.date($formatDateHeure, $intDate));
-		$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['Orientation']);
-		log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['Orientation']);
+		//log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['GPSLatitude']);
 		$photoaTraiter = ImageCreateFromJpeg($fichiercomplet);
-    $fichiercompletbis='/var/www/html/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
-    //$fichiercompletbis='/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
 		switch ($exif['Orientation']) {
 			case "6":
-				$photoaTraiter2 = imagerotate($photoaTraiter, 270, 0);
-				imagejpeg($photoaTraiter2,$fichiercompletbis);
-		log::add('diaporama', 'debug', '--> TOURNE:90 ');
+				imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletRotate);
 				break;
 			case "8":
-				$photoaTraiter2 = imagerotate($photoaTraiter, 90, 0);
-				imagejpeg($photoaTraiter2,$fichiercompletbis);
-		log::add('diaporama', 'debug', '--> TOURNE:-90 ');
+				imagejpeg(imagerotate($photoaTraiter, 90, 0),$fichiercompletRotate);
 				break;
 			case "3":
-				$photoaTraiter2 = imagerotate($photoaTraiter, 180, 0);
-				imagejpeg($photoaTraiter2,$fichiercompletbis);
-		log::add('diaporama', 'debug', '--> TOURNE:180 ');
+				imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletRotate);
 				break;
-		}		
-		// 1 = Pas de rotation
-		// 6 = Rotation 90° OK
-		// 8 = Rotation -90° OK
-		// 3 = Rotation 180° OK
-		
+		}	
+		// GPS - GPS - GPS
+		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitudeRef']); 
+		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitudeRef']); //E donne +, W donne -, N donne +, S donne -
+		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitude']); //:["45\/1","48\/1","54\/1"]
+		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitude']); //:["45\/1","48\/1","54\/1"]
+		log::add('diaporama', 'debug', '--> GPSLatitude0: '.self::recupGPS($exif['GPSLatitude'][0]));
+		log::add('diaporama', 'debug', '--> GPSLatitude1: '.self::recupGPS($exif['GPSLatitude'][1]));
+		log::add('diaporama', 'debug', '--> GPSLatitude2: '.self::recupGPS($exif['GPSLatitude'][2]));
+		log::add('diaporama', 'debug', '--> GPSLongitude0: '.self::recupGPS($exif['GPSLongitude'][0]));
+		log::add('diaporama', 'debug', '--> GPSLongitude1: '.self::recupGPS($exif['GPSLongitude'][1]));
+		log::add('diaporama', 'debug', '--> GPSLongitude2: '.self::recupGPS($exif['GPSLongitude'][2]));
+		//log::add('diaporama', 'debug', '--> DDDDDDDDDDDDDD: '.self::DMStoDD($exif['GPSLatitude']));
 
+// https://www.coordonnees-gps.fr/
+//log::add('diaporama', 'debug', '--> Latitude: '.self::DMSversDD($exif['GPSLatitude']));
+//log::add('diaporama', 'debug', '--> Longitude: '.self::DMSversDD($exif['GPSLongitude']));
+$requete="https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=AIzaSyAxphOPQWmxfy1JCxXiZeIKeVOwZSHmFGQ";
+log::add('diaporama', 'debug', '--> requete: '.$requete);
+
+$recupereJson=file_get_contents($requete);
+$json = json_decode($recupereJson,true);
+//log::add('diaporama', 'debug', '--> json: '.$recupereJson);
+//$json = json_decode(array_values($recupereJson,true));
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
+//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
+//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
+//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
+//log::add('diaporama', 'debug', '--> adresse: '.json_encode($json['plus_code']['compound_code']));
+//log::add('diaporama', 'debug', '--> adresse: '.$json['plus_code']['compound_code']);
+$site=strstr($json['plus_code']['compound_code'], ' ');
+log::add('diaporama', 'debug', '--> adresse: '.$site);
+$_device->checkAndUpdateCmd('site'.$_indexPhoto, $site); 
+		
 	}
 		
+}
+
+public function DMSversDD($WouS, $arrayGPS) {
+	if ($WouS=="W" || $WouS=="S") $negatif=-1; else $negatif=1;
+	$nombre=(floatval(str_replace("/1", "", self::recupGPS($arrayGPS[0]))))+((floatval(str_replace("/1", "", self::recupGPS($arrayGPS[2]))) /60 + floatval(str_replace("/1", "", self::recupGPS($arrayGPS[1]))))/60);
+	$nombre=$nombre*$negatif;
+return $nombre;
+}
+
+public function recupGPS($chaineGPS) {
+return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr($chaineGPS, '/')));
 }
 
 	public function refresh() {
@@ -735,14 +769,15 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 						$cmd->setDisplay('title_disable', 1);
 					}
 					$cmd->save();		
-					$cmd = $this->getCmd(null, 'orientation'.$i);
+					
+					$cmd = $this->getCmd(null, 'site'.$i);
 					if (!is_object($cmd)) {
 						$cmd = new diaporamaCmd();
 						$cmd->setType('info');
-						$cmd->setLogicalId('orientation'.$i);
+						$cmd->setLogicalId('site'.$i);
 						$cmd->setSubType('string');
 						$cmd->setEqLogic_id($this->getId());
-						$cmd->setName('Orientation '.$i);
+						$cmd->setName('Site '.$i);
 						$cmd->setIsVisible(1);
 						$cmd->setOrder($i*3+2);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
