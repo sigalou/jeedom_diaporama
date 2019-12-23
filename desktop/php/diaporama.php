@@ -197,7 +197,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                 <div class="form-group">
                   <label class="col-sm-4 control-label">{{Largeur des images}}</label>
                   <div class="col-sm-2">
-                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="largeurPhoto" placeholder="{{250px}}"/>
+                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="largeurPhoto" placeholder="{{250}}"/>
                   </div>
                 </div>
 							<div class="form-group">
@@ -211,7 +211,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                 <div class="form-group">
                   <label class="col-sm-4 control-label">{{Hauteur des images}}</label>
                   <div class="col-sm-2">
-                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="hauteurPhoto" placeholder="{{250px}}"/>
+                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="hauteurPhoto" placeholder="{{250}}"/>
                   </div>
                 </div>
                 <div class="form-group">

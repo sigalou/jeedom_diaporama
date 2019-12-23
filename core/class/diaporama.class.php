@@ -463,12 +463,16 @@ public static function scanLienPhotos($Id) {
 	}
 
 public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
+	
+	
+			log::add('diaporama', 'debug', '*********>**************>**********: '.$this->getId());
+
 	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
-    $fichier='/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
+    $fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
     $fichiercomplet='/var/www/html'.$fichier;
 	
 	if (!file_exists($fichiercomplet)) {	
-		$fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+		$fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 		$fichiercomplet='/var/www/html'.$fichier;
 	}
 
@@ -515,9 +519,10 @@ public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPh
 }
 
 public function infosExif($tirageSort, $_indexPhoto, $_device)  {
-    $fichier='/tmp/diaporama_'.$tirageSort.'.jpg';
+	
+    $fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
     $fichiercomplet='/var/www/html'.$fichier;
-    $fichiercompletRotate='/var/www/html/tmp/diaporama_'.$tirageSort.'_rotate.jpg';
+    $fichiercompletRotate='/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
 	if (file_exists($fichiercomplet)) {
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
 		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
@@ -547,42 +552,51 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 				imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletRotate);
 				break;
 		}	
-		// GPS - GPS - GPS
-		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitudeRef']); 
-		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitudeRef']); //E donne +, W donne -, N donne +, S donne -
-		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitude']); //:["45\/1","48\/1","54\/1"]
-		//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitude']); //:["45\/1","48\/1","54\/1"]
-		log::add('diaporama', 'debug', '--> GPSLatitude0: '.self::recupGPS($exif['GPSLatitude'][0]));
-		log::add('diaporama', 'debug', '--> GPSLatitude1: '.self::recupGPS($exif['GPSLatitude'][1]));
-		log::add('diaporama', 'debug', '--> GPSLatitude2: '.self::recupGPS($exif['GPSLatitude'][2]));
-		log::add('diaporama', 'debug', '--> GPSLongitude0: '.self::recupGPS($exif['GPSLongitude'][0]));
-		log::add('diaporama', 'debug', '--> GPSLongitude1: '.self::recupGPS($exif['GPSLongitude'][1]));
-		log::add('diaporama', 'debug', '--> GPSLongitude2: '.self::recupGPS($exif['GPSLongitude'][2]));
-		//log::add('diaporama', 'debug', '--> DDDDDDDDDDDDDD: '.self::DMStoDD($exif['GPSLatitude']));
+		
+		
+		$siteGPS="";
+		$APIGoogleMaps = config::byKey('APIGoogleMaps', 'diaporama', '0');
+		if ($APIGoogleMaps !="" && is_array($exif['GPSLatitude'])) {
+			//log::add('diaporama', 'debug', '--> TEST: '.$exif['GPSLatitude']);
+			// GPS - GPS - GPS
+			//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitudeRef']); 
+			//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitudeRef']); //E donne +, W donne -, N donne +, S donne -
+			//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLatitude']); //:["45\/1","48\/1","54\/1"]
+			//$_device->checkAndUpdateCmd('orientation'.$_indexPhoto, $exif['GPSLongitude']); //:["45\/1","48\/1","54\/1"]
+			//log::add('diaporama', 'debug', '--> GPSLatitude0: '.self::recupGPS($exif['GPSLatitude'][0]));
+			//log::add('diaporama', 'debug', '--> GPSLatitude1: '.self::recupGPS($exif['GPSLatitude'][1]));
+			//log::add('diaporama', 'debug', '--> GPSLatitude2: '.self::recupGPS($exif['GPSLatitude'][2]));
+			//log::add('diaporama', 'debug', '--> GPSLongitude0: '.self::recupGPS($exif['GPSLongitude'][0]));
+			//log::add('diaporama', 'debug', '--> GPSLongitude1: '.self::recupGPS($exif['GPSLongitude'][1]));
+			//log::add('diaporama', 'debug', '--> GPSLongitude2: '.self::recupGPS($exif['GPSLongitude'][2]));
+			//log::add('diaporama', 'debug', '--> DDDDDDDDDDDDDD: '.self::DMStoDD($exif['GPSLatitude']));
 
-// https://www.coordonnees-gps.fr/
-//log::add('diaporama', 'debug', '--> Latitude: '.self::DMSversDD($exif['GPSLatitude']));
-//log::add('diaporama', 'debug', '--> Longitude: '.self::DMSversDD($exif['GPSLongitude']));
-$requete="https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=AIzaSyAxphOPQWmxfy1JCxXiZeIKeVOwZSHmFGQ";
-log::add('diaporama', 'debug', '--> requete: '.$requete);
-
-$recupereJson=file_get_contents($requete);
-$json = json_decode($recupereJson,true);
-//log::add('diaporama', 'debug', '--> json: '.$recupereJson);
-//$json = json_decode(array_values($recupereJson,true));
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
-//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
-//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
-//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
-//log::add('diaporama', 'debug', '--> adresse: '.json_encode($json['plus_code']['compound_code']));
-//log::add('diaporama', 'debug', '--> adresse: '.$json['plus_code']['compound_code']);
-$site=strstr($json['plus_code']['compound_code'], ' ');
-log::add('diaporama', 'debug', '--> adresse: '.$site);
-$_device->checkAndUpdateCmd('site'.$_indexPhoto, $site); 
+			// https://www.coordonnees-gps.fr/
+			//log::add('diaporama', 'debug', '--> Latitude: '.self::DMSversDD($exif['GPSLatitude']));
+			//log::add('diaporama', 'debug', '--> Longitude: '.self::DMSversDD($exif['GPSLongitude']));
+			$requete="https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=".$APIGoogleMaps;
+			log::add('diaporama', 'debug', '--> Requete Web: '."https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+			$recupereJson=file_get_contents($requete);
+			$json = json_decode($recupereJson,true);
+			if ($json['error_message'] != "")
+				$siteGPS=$json['error_message'];
+			else
+				$siteGPS=strstr($json['plus_code']['compound_code'], ' ');
+			//$json = json_decode(array_values($recupereJson,true));
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
+			//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json));
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json['plus_code']));
+			//log::add('diaporama', 'debug', '--> pays: '.json_encode($json[0]['compound_code']));
+			//log::add('diaporama', 'debug', '--> pays: '.$json['results']['0']['address_composents']['5']['long_name']);
+			//log::add('diaporama', 'debug', '--> adresse: '.json_encode($json['plus_code']['compound_code']));
+			//log::add('diaporama', 'debug', '--> adresse: '.$json['plus_code']['compound_code']);
+			log::add('diaporama', 'debug', '--> Adresse trouvée: '.$siteGPS);
+		} else {
+		log::add('diaporama', 'debug', "--> Pas de coodonnées GPS de détectées (ou pas de clé Google Maps configurée)"); }
+$_device->checkAndUpdateCmd('site'.$_indexPhoto, $siteGPS); 
 		
 	}
 		
@@ -637,7 +651,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 				}
 			array_push($touteslesValeurs, $tirageSort);
 			$file = $diapo[$tirageSort];
-			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
+			$newfile = '/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 			log::add('diaporama', 'debug', 'Fichier sélectionné au hasard:'.$file.' copié dans '.$this->getConfiguration('dossierSambaDiaporama').' en '.$newfile);
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);

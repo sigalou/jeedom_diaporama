@@ -33,11 +33,17 @@ if (!isConnect()) {
                <input type="text" class="configKey form-control" data-l1key="formatDateHeure" placeholder="d-m-Y H:i:s" />
             </div>
         </div>
+
         <div class="form-group">
+            <label class="col-sm-3 col-xs-12 control-label">{{API Google Maps pour identification GPS}}</label>
+            <div class="col-lg-4">
+               <input type="text" class="configKey form-control" data-l1key="APIGoogleMaps" placeholder="jdtstcgdvqigmrshcfsipejfcgapmovfscufg" />
+            </div>
+        </div>        
+		<div class="form-group">
             <label class="col-sm-3 col-xs-12 control-label">{{Retourner automatiquement les photos}}</label>
             <div class="col-sm-3 col-xs-12">
                 <input type="checkbox" class="configKey" data-l1key="rotate" />
             </div>
-        </div>
-    </fieldset>
+        </div>    </fieldset>
 </form>
