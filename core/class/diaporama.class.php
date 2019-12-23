@@ -465,8 +465,6 @@ public static function scanLienPhotos($Id) {
 public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
 	
 	
-			log::add('diaporama', 'debug', '*********>**************>**********: '.$this->getId());
-
 	//log::add('diaporama', 'debug', '**********************début redimensionne_Photo*'.$tirageSort.'/'.$maxWidth.'/'.$maxHeight.'/'.$arrondiPhoto.'**********************************');
     $fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
     $fichiercomplet='/var/www/html'.$fichier;
@@ -525,7 +523,7 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
     $fichiercompletRotate='/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
 	if (file_exists($fichiercomplet)) {
 		$exif = exif_read_data($fichiercomplet, 'EXIF');
-		log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$exif:'.json_encode($exif).'~~~~~~~~~~~~~~~~~~~~~~~~~');
 
 		$intDate=0;
 		if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
@@ -540,20 +538,20 @@ public function infosExif($tirageSort, $_indexPhoto, $_device)  {
 		$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
 		log::add('diaporama', 'debug', '--> Date&Heure récupérés: '.date($formatDateHeure, $intDate));
 		//log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['GPSLatitude']);
-		$photoaTraiter = ImageCreateFromJpeg($fichiercomplet);
-		switch ($exif['Orientation']) {
-			case "6":
-				imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletRotate);
-				break;
-			case "8":
-				imagejpeg(imagerotate($photoaTraiter, 90, 0),$fichiercompletRotate);
-				break;
-			case "3":
-				imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletRotate);
-				break;
-		}	
-		
-		
+		if (config::byKey('rotate', 'diaporama', '0')) {
+			$photoaTraiter = ImageCreateFromJpeg($fichiercomplet);
+			switch ($exif['Orientation']) {
+				case "6":
+					imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletRotate);
+					break;
+				case "8":
+					imagejpeg(imagerotate($photoaTraiter, 90, 0),$fichiercompletRotate);
+					break;
+				case "3":
+					imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletRotate);
+					break;
+			}	
+		}
 		$siteGPS="";
 		$APIGoogleMaps = config::byKey('APIGoogleMaps', 'diaporama', '0');
 		if ($APIGoogleMaps !="" && is_array($exif['GPSLatitude'])) {
@@ -638,10 +636,10 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			//log::add('diaporama', 'debug', '**********************1***********************************');
 
 			$diapo=self::jpg_list($this->getConfiguration('dossierSambaDiaporama'));
+			//log::add('diaporama', 'debug', '**********************diapo:'.json_encode($diapo).'***********************************');
 			$nbPhotos=count($diapo);
 			log::add('diaporama', 'debug', '----------------------------------------------------------------------------');
 			log::add('diaporama', 'debug', 'Dans le dossier '.$dos.', il y a '.$nbPhotos.' photos');
-			//log::add('diaporama', 'debug', '**********************diapo:'.json_encode($diapo).'***********************************');
 			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 			for ($i = 1; $i <= $nbPhotosaGenerer; $i++) {
 			while ($compteurparSecurite < 20 && in_array($tirageSort, $touteslesValeurs))
@@ -894,7 +892,7 @@ if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=1;
 		//log::add('diaporama', 'debug', '**********************2***********************************');
 		//log::add('diaporama', 'debug', '**********************3'.$_dir.'***********************************');
 		foreach (self::ls($_dir) as $file) {
-			if (strpos($file['filename'],'.jpg') !== false) {
+			if (stripos($file['filename'],'.jpg') !== false) {
 				$return[] = $file['filename'];
 			}
 		}
