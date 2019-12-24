@@ -17,7 +17,7 @@
 
 function CaseCocheeSamba()
 {
-    if (document.formulaire.caseSamba.checked==1) document.formulaire.caseLocal.checked=0;
+	if (document.formulaire.caseSamba.checked==1) document.formulaire.caseLocal.checked=0;
 }
 
 function CaseCocheeLocal()

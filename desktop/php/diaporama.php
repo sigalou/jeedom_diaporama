@@ -203,7 +203,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 							<div class="form-group">
                   <label class="col-sm-4 control-label"></label>
                   <div class="col-sm-8">
-				<input type="checkbox" name='caseLocal' onclick="setTimeout(function(){CaseCocheeLocal()},500)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont stockées sur la même machine que celle de Jeedom" data-l1key="configuration" data-l2key="centrerLargeur"/> {{Centrer sur la largeur}}
+				<input type="checkbox" onclick="setTimeout(function(){CaseCocheeLocal()},500)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont stockées sur la même machine que celle de Jeedom" data-l1key="configuration" data-l2key="centrerLargeur"/> {{Centrer sur la largeur}}
                   </div>
                 </div>
 				
