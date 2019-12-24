@@ -253,11 +253,6 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 
 <?php
 
-// Ne marche pas
-//<input type="checkbox" class="cmdAttr tooltips" title="Spécifie" data-l1key="configuration" data-l2key="type_calcul_tendance"/> {{Journée entière}}<br/></span>'
-
-
-//log::add('diaporama', 'debug', "test:".$eqLogic->getConfiguration('cheminDiaporamaValide'));
 // Pour SAMBA
 $sambaActif	= config::byKey('samba::enable')	;
 log::add('diaporama', 'debug', "sambaActif:".$sambaActif);				
@@ -342,38 +337,18 @@ else
 			
           </div>
 		  
-<!--		  
-<div class="cursor" id="bt_media" data-l1key="logicalId" style="background-color : #ffffff; height : 120px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
-	<center>
-	<i class="fa loisir-musical7" style="font-size : 6em;color:#767676;"></i>
-	</center>
-<span style="font-size : 1.1em;position:relative; top : 25px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#767676"><center>{{Info Média}}</center></span>
-</div>
-	 	Castré par Nebz et HadesDT   
-<div class="cursor" id="bt_test" data-l1key="logicalId" style="background-color : #ffffff; height : 120px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >
-<center>
-<i class="fa loisir-musical7" style="font-size : 6em;color:#767676;"></i>
-</center>
-<span style="font-size : 1.1em;position:relative; top : 25px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;color:#767676"><center>{{Test}}</center></span>
-</div>
--->
-<?php
 
-	//if ($eqLogic->getConfiguration('devicetype')!="Smarthome")
-	//{
-		
-		//echo ">>".$eqLogic->getConfiguration('cheminDiaporamaValide');
-		
-?>
           <div class="col-sm-6 alert-<?php
-		  
-				 if ($eqLogic->getConfiguration('cheminDiaporamaValide')=="ok")
+		  $stockageSamba="";
+		  if (is_object($eqLogic)) {
+				if ($eqLogic->getConfiguration('cheminDiaporamaValide')=="ok")
 				  echo "success";
 				elseif ($eqLogic->getConfiguration('cheminDiaporamaValide')=="nok")
 				  echo "danger";		  
 				else
-				  echo "warning";		  
-	  
+				  echo "warning";
+			  $stockageSamba=$eqLogic->getConfiguration('stockageSamba');
+		  }			  
 		  ?> ">
             <br><br><form class="form-horizontal">
               <fieldset>
@@ -411,7 +386,7 @@ else
                       <span style="position:relative;top:+5px;" class="eqLogicAttr" data-l1key="configuration" data-l2key="cheminDiaporamaMessage"></span>
                   </div>
                 </div><br><?php
-		  if ($eqLogic->getConfiguration('stockageSamba')=="1")
+		  if ($stockageSamba=="1")
 			  echo '<center><a id="bt_testLienPhotos" class="btn btn-default pull-center"><i class="far fa-check-circle"></i> {{Tester le lien vers le dossier des photos}}</a></center>';
              ?> </fieldset>
             </form>
