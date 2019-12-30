@@ -679,7 +679,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			array_push($touteslesValeurs, $tirageSort);
 			$file = $diapo[$tirageSort];
 		
-			$newfile = '/var/www/html/tmp/diaporama_'.$tirageSort.'.jpg';
+			$newfile = '/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$tirageSort.' OK');
 			//$image='<img class="rien" style="height: '.$hauteurPhoto.';width: '.$largeurPhoto.';border-radius: '.$arrondiPhoto.';" src="tmp/diaporama_'.$tirageSort.'.jpg" alt="image">';
 			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
