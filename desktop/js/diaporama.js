@@ -15,15 +15,43 @@
 
 */
 
+
 function CaseCocheeSamba()
 {
-	if (document.formulaire.caseSamba.checked==1) document.formulaire.caseLocal.checked=0;
+	if (document.formulaire.caseSamba.checked==1) {
+		document.formulaire.caseLocal.checked=0;
+		document.formulaire.caseFacebook.checked=0;
+		$('#albumsFacebook').parent().hide();
+	}
 }
 
 function CaseCocheeLocal()
 {
-    if (document.formulaire.caseLocal.checked==1) document.formulaire.caseSamba.checked=0;
+    if (document.formulaire.caseLocal.checked==1) {
+		document.formulaire.caseSamba.checked=0;
+		document.formulaire.caseFacebook.checked=0;
+		$('#albumsFacebook').parent().hide();
+	}
 }
+
+function CaseCocheeFacebook()
+{
+    if (document.formulaire.caseFacebook.checked==1) {
+		document.formulaire.caseSamba.checked=0;
+		document.formulaire.caseLocal.checked=0;
+		$('#albumsFacebook').parent().show();
+	}
+}
+
+$('#bt_configFacebook').off('click').on('click', function ()
+{
+  $('#md_modal').dialog({title: "{{Config Facebook}}"});
+  //$('#md_modal').load('index.php?v=d&plugin=diaporama&modal=configFacebook&iddevice='+ $('.eqLogicAttr[data-l1key=logicalId]').value()).dialog('open');
+  //$('#md_modal').load('index.php?v=d&plugin=diaporama&modal=configFacebook&iddevice='+ $('.eqLogicAttr[data-l1key=configuration][data-l2key=stockageLocal]').value()).dialog('open');
+  $('#md_modal').load('index.php?v=d&plugin=diaporama&modal=configFacebook&iddevice='+ $('.eqLogicAttr[data-l1key=id]').value()).dialog('open');
+  //$('#md_modal').load('index.php?v=d&plugin=diaporama&modal=configFacebook&iddevice=123').dialog('open');
+
+});
 
 $('.eqLogicAttr[data-l1key=configuration][data-l2key=cheminDiaporamaValide]').on('change', function ()
 {
@@ -44,6 +72,14 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=sambaEtat]').on('change', f
 	$icon = $('.eqLogicAttr[data-l1key=configuration][data-l2key=sambaEtat]').value();
 	if($icon != '' && $icon != null)
 		$('#img_samba').attr("src", 'plugins/diaporama/desktop/images/samba_' + $icon + '.png');
+});
+
+$('.eqLogicAttr[data-l1key=configuration][data-l2key=facebookEtat]').on('change', function ()
+{
+	//alert( 'Hello, world!' );
+	$icon = $('.eqLogicAttr[data-l1key=configuration][data-l2key=facebookEtat]').value();
+	if($icon != '' && $icon != null)
+		$('#img_facebook').attr("src", 'plugins/diaporama/desktop/images/facebook_' + $icon + '.png');
 });
 
  $('#bt_testLienPhotos').off('click').on('click', function () {
@@ -76,6 +112,60 @@ function scanLienPhotos()
   });
 }
 
+ $('#bt_enregistreAlbumFB').off('click').on('click', function () {
+    bt_enregistreAlbumFB();
+});
+
+function bt_enregistreAlbumFB()
+{
+	
+	//{ element: { id: 10, quantity: 1} } then perform:
+
+//var element = {}, cart = [];
+//element.id = "132";
+//element.quantity = "456";
+//cart.push({element: element});
+	
+	//albumsFacebook = Tous les albums Facebook, récupéré par sendVarToJS au début de diaporama.php
+	//{ element: { id: 10, quantity: 1} } then perform:
+
+
+//var element = {};
+//var cart = [];
+
+	var albums = new Array();
+	for (const album of albumsFacebook) {
+		$value = $('.eqLogicAttr[data-l1key=configuration][data-l2key=albumsFacebook][data-l3key=albumfb_'+album.id+']').value();
+		albums.push([album.id,$value]);
+//element.id = album.id;
+//element.enable = $value;
+//cart.push({element: element});
+	}
+	
+  $.ajax({
+      type: "POST", 
+      url: "plugins/diaporama/core/ajax/diaporama.ajax.php", 
+      data:
+      {
+          action: "enregistreAlbumFB",
+		  albums: json_encode(albums),
+		  id: $('.eqLogicAttr[data-l1key=id]').value()
+      },
+      dataType: 'json',
+      error: function (request, status, error)
+      {
+          handleAjaxError(request, status, error);
+      },
+      success: function (data)
+      { 
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({message: data.result, level: 'danger'});
+              return;
+          }
+          window.location.reload();
+      }
+  });
+}
 
 $('#bt_forcerDefaultCmd').off('click').on('click', function () {
   var dialog_title = '{{Recharge configuration par défaut}}';

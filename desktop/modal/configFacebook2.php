@@ -18,10 +18,6 @@ foreach ($eqLogics as $eqLogic)
 }
 
 
-//if faut envoyer config::byKey('albumsFacebook', 'diaporama', '0') à JS
-sendVarToJS('albumsFacebook', config::byKey('albumsFacebook', 'diaporama', '0'));
-
-
 // Pour savoir si on va afficher ou pas le bloc #albumsFacebook en JS
 		  if (is_object($eqLogic)) {
 				if ($eqLogic->getConfiguration('facebookEtat')=="ok")
@@ -319,7 +315,6 @@ else
 				else
 				  echo "warning";
 			  $stockageSamba=$eqLogic->getConfiguration('stockageSamba');
-			  $stockageFacebook=$eqLogic->getConfiguration('stockageFacebook');
 		  }			  
 		  ?> ">
             <br><br><form class="form-horizontal">
@@ -369,14 +364,31 @@ else
 				
 
 				
-			
 				
-		  <?php }
+						<div class="cursor logoSecondary" id="bt_configFacebook">
+			<i class="fas fa-clock"></i>
+			<br />
+			<span>{{Rappels/Alarmes}}</span>
+		</div>
+				
+				
+		  <?php }?>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				<?php
 		  if ($stockageSamba=="1")
 			  echo '<center><a id="bt_testLienPhotos" class="btn btn-default pull-center"><i class="far fa-check-circle"></i> {{Tester le lien vers le dossier SAMBA des photos}}</a></center><br>';
-		  if ($stockageFacebook=="1")
-			  echo '<center><a id="bt_configFacebook" class="btn btn-primary pull-center"><i class="far fa-check-circle"></i> {{Sélectionner les albums photos Facebook}}</a></center><br>';
-		  ?> 
+             ?> 
 			 </fieldset>			 
 </form>			 
 

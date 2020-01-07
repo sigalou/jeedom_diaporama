@@ -37,9 +37,15 @@ if (!isConnect()) {
         <div class="form-group">
             <label class="col-sm-3 col-xs-12 control-label">{{API Google Maps pour identification GPS}}</label>
             <div class="col-lg-4">
-               <input type="text" class="configKey form-control" data-l1key="APIGoogleMaps" placeholder="jdtstcgdvqigmrshcfsipejfcgapmovfscufg" />
+               <input type="text" class="configKey form-control" data-l1key="APIGoogleMaps"  />
             </div>
         </div>        
+        <div class="form-group">
+            <label class="col-sm-3 col-xs-12 control-label">{{Token Facebook}}</label>
+            <div class="col-lg-4">
+               <input type="text" class="configKey form-control" data-l1key="TokenFacebook"  />
+            </div>
+        </div>  		
 		<div class="form-group">
             <label class="col-sm-3 col-xs-12 control-label">{{Retourner automatiquement les photos}}</label>
             <div class="col-sm-3 col-xs-12">

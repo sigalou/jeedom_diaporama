@@ -26,13 +26,18 @@ try {
         throw new \Exception('401 Unauthorized');
     }
 //            $('.deamonCookieState').empty().append('<span class="label label-success" style="font-size:1em;">00012300</span>');
-    //log::add('diaporama', 'info', 'Lancement Serveur pour Cookie - action='.init('action'));
+//    log::add('diaporama', 'info', 'Lancement AJAX - action='.init('action'));
+//    log::add('diaporama', 'info', 'Lancement AJAX - id='.init('id'));
+//    log::add('diaporama', 'info', 'Lancement AJAX - albums='.init('albums'));
     switch (init('action')) {
         case 'scanLienPhotos':
             diaporama::scanLienPhotos(init('id'));
             ajax::success();
         break;
-    }
+         case 'enregistreAlbumFB':
+            diaporama::enregistreAlbumFB(init('id'),init('albums'));
+            ajax::success();
+        break;   }
     throw new \Exception('Aucune methode correspondante');
 }
 catch(\Exception $e) {
