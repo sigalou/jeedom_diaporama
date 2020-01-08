@@ -540,7 +540,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Photo '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*3);
+						$cmd->setOrder($i*5);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -554,7 +554,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Date '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*3+1);
+						$cmd->setOrder($i*5+1);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -569,14 +569,41 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Site '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*3+2);
+						$cmd->setOrder($i*5+2);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
 					$cmd->save();						
 					
-					
-					
+					$cmd = $this->getCmd(null, 'ville'.$i);
+					if (!is_object($cmd)) {
+						$cmd = new diaporamaCmd();
+						$cmd->setType('info');
+						$cmd->setLogicalId('ville'.$i);
+						$cmd->setSubType('string');
+						$cmd->setEqLogic_id($this->getId());
+						$cmd->setName('Ville '.$i);
+						$cmd->setIsVisible(1);
+						$cmd->setOrder($i*5+3);
+						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+						$cmd->setDisplay('title_disable', 1);
+					}
+					$cmd->save();							
+						
+					$cmd = $this->getCmd(null, 'pays'.$i);
+					if (!is_object($cmd)) {
+						$cmd = new diaporamaCmd();
+						$cmd->setType('info');
+						$cmd->setLogicalId('pays'.$i);
+						$cmd->setSubType('string');
+						$cmd->setEqLogic_id($this->getId());
+						$cmd->setName('Pays '.$i);
+						$cmd->setIsVisible(1);
+						$cmd->setOrder($i*5+3);
+						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+						$cmd->setDisplay('title_disable', 1);
+					}
+					$cmd->save();					
 					
 					}			
 	
