@@ -346,6 +346,8 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			$nbPhotosaGenerer=$this->getConfiguration('nbPhotosaGenerer');
 			$centrerLargeur=$this->getConfiguration('centrerLargeur');
 			//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
+			$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
+			if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
 		
 		
 		if ($this->getConfiguration('stockageSamba')==1) {
@@ -458,8 +460,14 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 					log::add('diaporama', 'debug', "Source : ".$json['images']['0']['source']);
 		//$image= '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
 		//$image= '<img class="rien" src="'.$json['images']['0']['source'].'" alt="image">';	
+		
+		
+					//log::add('diaporama', 'debug', "Date récupérée :".strtotime($json['created_time']));
+					//log::add('diaporama', 'debug', "Format Date :".$formatDateHeure);
+		
+		
 		$i="1";
-		$this->checkAndUpdateCmd('date'.$i, $json['created_time']);		
+		$this->checkAndUpdateCmd('date'.$i, date($formatDateHeure,  strtotime($json['created_time'])));				
 		$this->checkAndUpdateCmd('site'.$i, $json['place']['name']);		
 		$image=self::redimensionne_PhotoFacebook($json['images']['0']['source'],$json['images']['0']['width'],$json['images']['0']['height'],$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 
