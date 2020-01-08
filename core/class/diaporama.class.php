@@ -469,6 +469,8 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 		$i="1";
 		$this->checkAndUpdateCmd('date'.$i, date($formatDateHeure,  strtotime($json['created_time'])));				
 		$this->checkAndUpdateCmd('site'.$i, $json['place']['name']);		
+		$this->checkAndUpdateCmd('pays'.$i, $json['place']['location']['country']);		
+		$this->checkAndUpdateCmd('ville'.$i, $json['place']['location']['city']);		
 		$image=self::redimensionne_PhotoFacebook($json['images']['0']['source'],$json['images']['0']['width'],$json['images']['0']['height'],$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 
 		$this->checkAndUpdateCmd('photo'.$i, $image);		
