@@ -348,6 +348,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 			$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
 			if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
 		
 		
 		if ($this->getConfiguration('stockageSamba')==1) {
@@ -361,7 +362,6 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			$nbPhotos=count($diapo);
 			log::add('diaporama', 'debug', '----------------------------------------------------------------------------');
 			log::add('diaporama', 'debug', 'Dans le dossier '.$dos.', il y a '.$nbPhotos.' photos');
-			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
 			for ($i = 1; $i <= $nbPhotosaGenerer; $i++) {
 			while ($compteurparSecurite < 20 && in_array($tirageSort, $touteslesValeurs))
 				{
@@ -393,7 +393,10 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 		$CompteAlbums=0;
 		foreach ($Albums as $key2 => $value2) {
 			if ($Albums[$key2][1] == '1') $CompteAlbums++;
-		}	
+		}
+
+	for ($i = 1; $i <= $nbPhotosaGenerer; $i++) {
+
 		//log::add('diaporama', 'debug', 'CompteAlbums : '.$CompteAlbums.'***********************************');
 		$tirageSort=mt_rand(0,$CompteAlbums-1);
 		//log::add('diaporama', 'debug', 'tirageSort : '.$tirageSort.'***********************************');
@@ -466,18 +469,16 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 					//log::add('diaporama', 'debug', "Format Date :".$formatDateHeure);
 		
 		
-		$i="1";
 		$this->checkAndUpdateCmd('date'.$i, date($formatDateHeure,  strtotime($json['created_time'])));				
 		$this->checkAndUpdateCmd('site'.$i, $json['place']['name']);		
 		$this->checkAndUpdateCmd('pays'.$i, $json['place']['location']['country']);		
 		$this->checkAndUpdateCmd('ville'.$i, $json['place']['location']['city']);		
 		$image=self::redimensionne_PhotoFacebook($json['images']['0']['source'],$json['images']['0']['width'],$json['images']['0']['height'],$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
-
 		$this->checkAndUpdateCmd('photo'.$i, $image);		
 		} else {
 					log::add('diaporama', 'debug', "*********************** Souci de récupération des infos de la photo");
 					}		
-		
+	}
 		/*
 		// on va compter le nb de photos des albums cochés 
 		// Lecture de arrayAlbumsFacebook dans configuration du device en cours ($device)
@@ -508,7 +509,6 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			$dos=dirname(__FILE__).$dossierLocal; 
 			$diapo=glob($dos.'*.jpg');
 			$nbPhotos=count($diapo);
-			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
 			for ($i = 1; $i <= $nbPhotosaGenerer; $i++) {
 			while ($compteurparSecurite < 20 && in_array($tirageSort, $touteslesValeurs))
 				{
