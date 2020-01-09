@@ -473,6 +473,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 		$this->checkAndUpdateCmd('site'.$i, $json['place']['name']);		
 		$this->checkAndUpdateCmd('pays'.$i, $json['place']['location']['country']);		
 		$this->checkAndUpdateCmd('ville'.$i, $json['place']['location']['city']);		
+		$this->checkAndUpdateCmd('album'.$i, $json['album']['name']);		
 		$image=self::redimensionne_PhotoFacebook($json['images']['0']['source'],$json['images']['0']['width'],$json['images']['0']['height'],$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 		$this->checkAndUpdateCmd('photo'.$i, $image);		
 		} else {
@@ -542,7 +543,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Photo '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*5);
+						$cmd->setOrder($i*6);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -556,7 +557,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Date '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*5+1);
+						$cmd->setOrder($i*6+1);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -571,7 +572,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Site '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*5+2);
+						$cmd->setOrder($i*6+2);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -586,7 +587,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Ville '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*5+3);
+						$cmd->setOrder($i*6+3);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
@@ -601,13 +602,26 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 						$cmd->setEqLogic_id($this->getId());
 						$cmd->setName('Pays '.$i);
 						$cmd->setIsVisible(1);
-						$cmd->setOrder($i*5+3);
+						$cmd->setOrder($i*6+4);
 						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 						$cmd->setDisplay('title_disable', 1);
 					}
 					$cmd->save();					
 					
-					}			
+					$cmd = $this->getCmd(null, 'album'.$i);
+					if (!is_object($cmd)) {
+						$cmd = new diaporamaCmd();
+						$cmd->setType('info');
+						$cmd->setLogicalId('album'.$i);
+						$cmd->setSubType('string');
+						$cmd->setEqLogic_id($this->getId());
+						$cmd->setName('Album '.$i);
+						$cmd->setIsVisible(1);
+						$cmd->setOrder($i*6+5);
+						//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+						$cmd->setDisplay('title_disable', 1);
+					}
+					$cmd->save();						}			
 	
 	
 				//Commande Refresh
