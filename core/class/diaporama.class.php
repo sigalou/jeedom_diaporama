@@ -348,7 +348,7 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 			$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
 			if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
-			if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
+			if ($nbPhotosaGenerer<1 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
 		
 		
 		if ($this->getConfiguration('stockageSamba')==1) {
@@ -800,7 +800,7 @@ public function preSave() {
 
 		// Controle si 	nbPhotosaGenerer n'est pas vide
 		$nbPhotosaGenerer=$this->getConfiguration('nbPhotosaGenerer');
-		if ($nbPhotosaGenerer<2 || $nbPhotosaGenerer>9) 
+		if ($nbPhotosaGenerer<1 || $nbPhotosaGenerer>9) 
 			{$nbPhotosaGenerer=2;
 			$this->setConfiguration('nbPhotosaGenerer',"2");
 		}
@@ -868,6 +868,12 @@ $this->setConfiguration('cheminDiaporamaValide', "question");
 		$requete="https://graph.facebook.com/v5.0/me?access_token=".$TokenFacebook;
 		log::add('diaporama', 'debug', 'On teste le compte Facebook avec la requète : '.$requete.'***********************************');
 		
+		
+		$recupereJson=file_get_contents($requete);
+		if(empty($recupereJson)) {log::add('diaporama', 'debug', 'vide');}
+		
+		
+		
 		if ($recupereJson=file_get_contents($requete, true)) {
 		$json = json_decode($recupereJson,true);
 		//log::add('diaporama', 'debug', '**********************json:'.self::Utf8_ansi($recupereJson).'***********************************');
@@ -918,6 +924,8 @@ $this->setConfiguration('cheminDiaporamaValide', "question");
 			}
 		}
 		else {
+		log::add('diaporama', 'debug', '******* Souci dans la requète JSON '.$recupereJson);
+			
 		log::add('diaporama', 'debug', '******* Souci dans la requète JSON ');
 			$this->setConfiguration('cheminDiaporamaValide', "nok");
 			$this->setConfiguration('facebookEtat', "nok");
