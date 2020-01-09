@@ -4,15 +4,26 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 class diaporama extends eqLogic {
 	
 		
-public static function cron($_eqlogic_id = null) {
-
-}
+	public static function cron($_eqlogic_id = null) {
+		$eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('diaporama', true);
+		foreach ($eqLogics as $diaporama) {
+			$autorefresh = $diaporama->getConfiguration('autorefresh','00 22 01 01 3 2020');
+			if ($autorefresh != '') {
+				try {
+					//log::add('diaporama', 'debug', __('Expression cron valide pour ', __FILE__) . $diaporama->getHumanName() . ' : ' . $autorefresh);
+					$c = new Cron\CronExpression($autorefresh, new Cron\FieldFactory);
+					if ($c->isDue()) {
+						$diaporama->refresh();
+					}
+				} catch (Exception $exc) {
+					log::add('diaporama', 'error', __('Expression cron non valide pour ', __FILE__) . $diaporama->getHumanName() . ' : ' . $autorefresh);
+				}
+			}
+		}
+	}	
 
 public static function enregistreAlbumFB($Id, $Albums) {
 	
-	
-	
-
 	
 	
 $Albums=json_decode($Albums);
@@ -333,7 +344,6 @@ return $nombre;
 public function recupGPS($chaineGPS) {
 return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr($chaineGPS, '/')));
 }
-
 	public function refresh() {
 			$largeurPhoto=$this->getConfiguration('largeurPhoto');
 			$hauteurPhoto=$this->getConfiguration('hauteurPhoto');
@@ -527,7 +537,6 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 			}
 		}
 	}
-		
 	public function postSave() {
 	//	log::add('diaporama', 'debug', '**********************début postSave '.$this->getName().'***********************************');
 
@@ -653,17 +662,12 @@ return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr(
 
 		
 	}
-
-	
 	public function preUpdate() {
 	}
-	
 	public function preRemove () {
 
 	}
-	
-	
-		public static function lsjpg($_dir = '', $_type = 'backup') {
+	public static function lsjpg($_dir = '', $_type = 'backup') {
 		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.jpg', $_type);
 		$result = explode("\n", com_shell::execute($cmd));
 		$return = array();

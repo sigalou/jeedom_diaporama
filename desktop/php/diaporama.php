@@ -142,13 +142,7 @@ foreach (jeeObject::all() as $object)
                     </select>
                   </div>
                 </div>
-				<!-- Onglet "Device Playlist" -->
-                <div class="form-group">
-                  <label class="col-sm-4 control-label">Option</label>
-                  <div class="col-sm-8" id="widgetPlayListEnable">
-                    <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="widgetPlayListEnable" />{{Activer le widget Playlist}}</label>
-                  </div>
-	</div>
+
                 <!-- Catégorie" -->
                 <div class="form-group">
                   <label class="col-sm-4 control-label">{{Catégorie}}</label>
@@ -171,7 +165,17 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                     <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>{{Visible}}</label>
                   </div>
                 </div>
-			<br><br> 
+				<div class="form-group">
+			<label class="col-sm-4 control-label">{{Actualisation du Diaporama}}</label>
+				<div class="col-sm-8">
+					<div class="input-group">
+					<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="autorefresh" placeholder="{{Auto-actualisation (cron)}}"/>
+					<span class="input-group-btn">
+					<a class="btn btn-success btn-sm " id="bt_cronGenerator" ><i class="fas fa-question-circle"></i></a>
+					</span>
+					</div>
+				</div>
+			</div>
                 <div class="form-group">
                   <label class="col-sm-4 control-label">{{Largeur des images}}</label>
                   <div class="col-sm-2">
@@ -236,6 +240,7 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 				<input type="checkbox" name='caseFacebook' onclick="setTimeout(function(){CaseCocheeFacebook()},300)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont sur un compte Facebook" data-l1key="configuration" data-l2key="stockageFacebook"/> {{Utilisation des photos Facebook}}
                   </div>
                 </div>
+
 				
 
 <?php
@@ -302,6 +307,18 @@ else
                 </div>				
 <?php
 } ?>
+
+
+
+
+
+
+
+
+
+
+
+
               </fieldset>
 			
             </form>

@@ -86,6 +86,12 @@ $('.eqLogicAttr[data-l1key=configuration][data-l2key=facebookEtat]').on('change'
     scanLienPhotos();
 });
 
+$('#bt_cronGenerator').off('click').on('click',function(){
+    jeedom.getCronSelectModal({},function (result) {
+        $('.eqLogicAttr[data-l1key=configuration][data-l2key=autorefresh]').value(result.value);
+    });
+});
+
 function scanLienPhotos()
 {
   $.ajax({
@@ -298,11 +304,7 @@ console.log ("adresse:"+yourUrl);
 
 
 
-$('#bt_cronGenerator').off('click').on('click',function(){
-    jeedom.getCronSelectModal({},function (result) {
-        $('.configKey[data-l1key=autorefresh]').value(result.value);
-    });
-});
+
 
 $("#bt_addespeasyAction").off('click').on('click', function(event)
 {
