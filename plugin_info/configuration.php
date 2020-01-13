@@ -23,8 +23,6 @@ if (!isConnect()) {
     die();
 }
 ?>
-
-
 <form class="form-horizontal">
     <fieldset>
         <div class="form-group">

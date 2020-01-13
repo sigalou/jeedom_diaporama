@@ -14,11 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
-
 if (!isConnect('admin')) {
 	throw new Exception('401 Unauthorized');
 }
-
 echo '<form name="formulaire" id="div_eventEditAlert" class="form-horizontal"><fieldset>';
 	$device = eqLogic::byId($_GET['iddevice']);
 	if (is_object($device)) {
@@ -35,7 +33,6 @@ echo '<form name="formulaire" id="div_eventEditAlert" class="form-horizontal"><f
 		}
 	}
 echo '</fieldset></form><a class="btn btn-success pull-right" id="bt_enregistreAlbumFB" style="color: white;"><i class="fa fa-check-circle"></i> {{Enregistrer}}</a>';
-
 include_file('desktop', 'diaporama', 'js', 'diaporama'); 
 //include_file('desktop', 'diaporama', 'css', 'diaporama'); 
 //include_file('core', 'plugin.template', 'js'); 

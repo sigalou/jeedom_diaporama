@@ -2,13 +2,11 @@
 if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
-
 // Obtenir l'identifiant du plugin
 $plugin = plugin::byId('diaporama');
 // Charger le javascript
 sendVarToJS('eqType', $plugin->getId());
 //sendVarToJS('serveurtest', 'lionel dans diaporama.php');
-
 // Accéder aux données du plugin
 $eqLogics = eqLogic::byType($plugin->getId());
 $logicalIdToHumanReadable = array();
@@ -16,33 +14,24 @@ foreach ($eqLogics as $eqLogic)
 {
   $logicalIdToHumanReadable[$eqLogic->getLogicalId()] = $eqLogic->getHumanName(true, false);
 }
-
-
 //if faut envoyer config::byKey('albumsFacebook', 'diaporama', '0') à JS
 sendVarToJS('albumsFacebook', config::byKey('albumsFacebook', 'diaporama', '0'));
-
-
 // Pour savoir si on va afficher ou pas le bloc #albumsFacebook en JS
-		  if (is_object($eqLogic)) {
-				if ($eqLogic->getConfiguration('facebookEtat')=="ok")
-					sendVarToJS('facebookEtat', "ok");
-				else
-					sendVarToJS('facebookEtat', "nok");
-		  }
+  if (is_object($eqLogic)) {
+		if ($eqLogic->getConfiguration('facebookEtat')=="ok")
+			sendVarToJS('facebookEtat', "ok");
+		else
+			sendVarToJS('facebookEtat', "nok");
+  }
 //echo $eqLogic->getConfiguration('facebookEtat');
 ?>
-
 <script>
 if (facebookEtat == "ok") 
 	$('#albumsFacebook').parent().show(); 
 else 
 	$('#albumsFacebook').parent().hide();
-
-
    // alert( 'facebookEtat='+facebookEtat );
-  
 </script>
-				            
 <!-- Container global (Ligne bootstrap) -->
 <div class="row row-overflow">
   <!-- Container des listes de commandes / éléments -->
@@ -55,14 +44,12 @@ else
 			<br />
 			<span style="color:#a15bf7">{{Ajouter}}</span>
 		</div>
-
 		<!-- Bouton d accès à la configuration -->
 		<div class="cursor eqLogicAction logoSecondary" data-action="gotoPluginConf">
 			<i class="fas fa-wrench" style="font-size : 5em;color:#a15bf7;"></i>
 			<br />
 			<span style="color:#a15bf7">{{Configuration}}</span>
 		</div>
-
     </div>
     <!-- Début de la liste des objets -->
     <legend><i class="fas fa-table"></i> {{Mes Diaporamas}}</legend>
@@ -78,9 +65,7 @@ else
 			<div class="eqLogicThumbnailContainer prem">
 <?php
 foreach($eqLogics as $eqLogic) {
-
 	if (($eqLogic->getConfiguration('devicetype') != "Smarthome") && ($eqLogic->getConfiguration('devicetype') != "Player") && ($eqLogic->getConfiguration('devicetype') != "PlayList")) {
-
 		$opacity = ($eqLogic->getIsEnable()) ? '' : ' disableCard';
 		echo '<div class="eqLogicDisplayCard cursor prem '.$opacity.'" data-eqLogic_id="'.$eqLogic->getId().'" >';
 		echo '<img class="lazy" src="'.$plugin->getPathImgIcon().'" style="min-height:75px !important;" />';
@@ -93,8 +78,6 @@ foreach($eqLogics as $eqLogic) {
 			</div>
 		</div>
     </div>
-
-
 	
   </div>
   <!-- Container du panneau de contrôle -->
@@ -248,84 +231,52 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
 // Pour SAMBA
 $sambaActif	= config::byKey('samba::enable')	;
 //log::add('diaporama', 'debug', "sambaActif:".$sambaActif);				
-if ($sambaActif)
-{
-	//echo 'Samba est actif';
-	
-$sambaIP	= config::byKey('samba::backup::ip')	;
-$sambaUsername	= config::byKey('samba::backup::username')	;
-$sambaPassword	= config::byKey('samba::backup::password')	;
-$sambaShare	= config::byKey('samba::backup::share')	;
-$sambaFolder	= config::byKey('samba::backup::folder')	;/*
-log::add('diaporama', 'debug', "sambaShare:".$sambaShare);
-log::add('diaporama', 'debug', "sambaPassword:".$sambaPassword);
-log::add('diaporama', 'debug', "Username:".$sambaUsername);
-log::add('diaporama', 'debug', "sambaIP:".$sambaIP);*/
-
-
+	if ($sambaActif)
+	{
+		//echo 'Samba est actif';
+	$sambaIP	= config::byKey('samba::backup::ip')	;
+	$sambaUsername	= config::byKey('samba::backup::username')	;
+	$sambaPassword	= config::byKey('samba::backup::password')	;
+	$sambaShare	= config::byKey('samba::backup::share')	;
+	$sambaFolder	= config::byKey('samba::backup::folder')	;
+		?>
+				<br><br>
+							<div class="form-group">
+					  <label class="col-sm-4 control-label"></label>
+					  <div class="col-sm-8">
+					<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},300)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos sur le réseau via Samba}}
+					  </div>
+					</div>
+					
+					<div class="form-group">
+					  <label class="col-sm-4 control-label">{{Chemin Samba des photos}}</label>
+					  <div class="col-sm-8"><?php echo $sambaShare?>
+						<input type="text" name="inputSamba" class="eqLogicAttr form-control" style="width: 50%" data-l1key="configuration" data-l2key="dossierSambaDiaporama" placeholder="{{/mesPhotos}}"/>
+					  </div>
+					</div>	
+					<br>
+	<?php	
+	}
+	else
+	{?><br><br>						<div class="form-group">
+					  <label class="col-sm-4 control-label"></label>
+					  <div class="col-sm-8">
+					<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},300)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos en réseau via Samba}}
+					  </div>
+					</div>
+					
+					<div class="form-group">
+					  <label class="col-sm-4 control-label">{{Chemin Samba des photos}}</label>
+					  <div class="col-sm-8">
+						<b>Samba</b> est inactif dans la configuration de Jeedom, donc impossible d'utiliser un chemin Samba
+					  </div>
+					</div>				
+	<?php
+	}
 	?>
-
-
-			<br><br>
-						<div class="form-group">
-                  <label class="col-sm-4 control-label"></label>
-                  <div class="col-sm-8">
-				<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},300)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos sur le réseau via Samba}}
-                  </div>
-                </div>
-				
-                <div class="form-group">
-                  <label class="col-sm-4 control-label">{{Chemin Samba des photos}}</label>
-                  <div class="col-sm-8"><?php echo $sambaShare?>
-                    <input type="text" name="inputSamba" class="eqLogicAttr form-control" style="width: 50%" data-l1key="configuration" data-l2key="dossierSambaDiaporama" placeholder="{{/mesPhotos}}"/>
-                  </div>
-                </div>	
-				<br>
-
-
-
-<?php	
-	
-
-	
-}
-else
-{
-
-	?><br><br>						<div class="form-group">
-                  <label class="col-sm-4 control-label"></label>
-                  <div class="col-sm-8">
-				<input type="checkbox" name='caseSamba' onclick="setTimeout(function(){CaseCocheeSamba()},300)" style="position:relative;top:2px;" class="eqLogicAttr" title="Les photos sont accessibles via Samba" data-l1key="configuration" data-l2key="stockageSamba"/> {{Stockage des photos en réseau via Samba}}
-                  </div>
-                </div>
-				
-                <div class="form-group">
-                  <label class="col-sm-4 control-label">{{Chemin Samba des photos}}</label>
-                  <div class="col-sm-8">
-                    <b>Samba</b> est inactif dans la configuration de Jeedom, donc impossible d'utiliser un chemin Samba
-                  </div>
-                </div>				
-<?php
-} ?>
-
-
-
-
-
-
-
-
-
-
-
-
               </fieldset>
-			
             </form>
-			
           </div>
-		  
-
           <div class="col-sm-6 alert-<?php
 		  $stockageSamba="";
 		  if (is_object($eqLogic)) {
@@ -341,8 +292,6 @@ else
 		  ?> ">
             <br><br><form class="form-horizontal">
               <fieldset>
-      
-	
 				<span style="display:none" class="eqLogicAttr" data-l1key="configuration" data-l2key="cheminDiaporamaValide"></span>
 				<span style="display:none" class="eqLogicAttr" data-l1key="configuration" data-l2key="localEtat"></span>
 				<span style="display:none" class="eqLogicAttr" data-l1key="configuration" data-l2key="sambaEtat"></span>
@@ -383,11 +332,7 @@ else
 // Pour savoir si on va afficher ou pas le bloc #albumsFacebook en JS
 // Bug non trouvé qu'avec JS, quand on fait Samba puis test, la liste réapparait, donc ajout de ce code en php
 		  if ((is_object($eqLogic)) && ($eqLogic->getConfiguration('facebookEtat')=="ok")) {?>	
-				
 
-				
-			
-				
 		  <?php }
 		  if ($stockageSamba=="1")
 			  echo '<center><a id="bt_testLienPhotos" class="btn btn-default pull-center"><i class="far fa-check-circle"></i> {{Tester le lien vers le dossier SAMBA des photos}}</a></center><br>';
@@ -396,14 +341,7 @@ else
 		  ?> 
 			 </fieldset>			 
 </form>			 
-
-			 
-
-            
-				
-
-
-		  
+ 
         </div>
       </div>
       </div>
@@ -440,12 +378,6 @@ else
         </form>
 		
       </div>
-
-
-
-
-
-
     </div>
   </div>
 </div>
