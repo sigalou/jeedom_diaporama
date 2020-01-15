@@ -1,7 +1,7 @@
 <?php
 if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
-}
+} 
 
 // Obtenir l'identifiant du plugin
 $plugin = plugin::byId('diaporama');

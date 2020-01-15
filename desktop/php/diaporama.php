@@ -2,7 +2,7 @@
 if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
-// Obtenir l'identifiant du plugin
+// Obtenir l'identifiant du plugin 
 $plugin = plugin::byId('diaporama');
 // Charger le javascript
 sendVarToJS('eqType', $plugin->getId());
