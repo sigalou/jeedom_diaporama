@@ -75,15 +75,20 @@ class diaporama extends eqLogic {
 		return true;
 	}
 	public function redimensionne_Photo($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
-		$fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
-		$fichiercomplet='/var/www/html'.$fichier;
-		if (!file_exists($fichiercomplet)) {	
-			$fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
-			$fichiercomplet='/var/www/html'.$fichier;
+		//event::add('jeedom::alert', array('level' => 'warning', 'page' => 'diaporama', 'message' => __('dossiertmp:'.sys_get_temp_dir().' ', __FILE__)));
+			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
+			$dossierTMP = $dossierPlugin.'/tmp';
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+		
+		if (!file_exists($fichier)) {	
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 		}
-		if (file_exists($fichiercomplet)) {
+		if (file_exists($fichier)) {
+		//log::add('diaporama', 'debug', '-->existe : $fichier :'.$$fichier);
 			# Passage des paramètres dans la table : imageinfo
-			$imageinfo= getimagesize("$fichiercomplet");
+			$imageinfo= getimagesize("$fichier");
 			$iw=$imageinfo[0];
 			$ih=$imageinfo[1];
 			# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
@@ -105,12 +110,12 @@ class diaporama extends eqLogic {
 				$decalage=round(($maxWidth-$nwidth)/2);
 				if ($decalage > 1)
 					$decalerAdroite="position: relative; left: ".$decalage."px;";
-			log::add('diaporama', 'debug', '--> Image '.$iw.'x'.$ih.' redimensée en '.$nwidth.'x'.$nheight);
 			}
-			return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichier.'" alt="image">';
+			log::add('diaporama', 'debug', '--> Image '.$iw.'x'.$ih.' redimensée en '.$nwidth.'x'.$nheight);
+			return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichierpourHTML.'" alt="image">';
 		} else {
-			log::add('diaporama', 'debug', '**********************file_exists PAS:'.$fichiercomplet.'***********************************');
-			return "Le fichier $fichiercomplet n'existe pas.";
+			log::add('diaporama', 'debug', "**********************Ce fichier n'existe pas : ".$fichier.'***********************************');
+			return "Le fichier $fichier n'existe pas.";
 		}    
 	}
 	public function redimensionne_PhotoFacebook($source,$Width,$Height,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur)  {
@@ -139,26 +144,38 @@ class diaporama extends eqLogic {
 		}
 		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$source.'" alt="image">';
 	}
-	public function infosExif($tirageSort, $_indexPhoto, $_device)  {
-		$fichier='/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
-		$fichiercomplet='/var/www/html'.$fichier;
-		$fichiercompletRotate='/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
-		if (file_exists($fichiercomplet)) {
-			$exif = exif_read_data($fichiercomplet, 'EXIF');
+	public function infosExif($tirageSort, $_indexPhoto, $_device, $_autoriserDateFichier=false)  {
+		
+			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
+			$dossierTMP = $dossierPlugin.'/tmp';
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			$fichiercompletRotate=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+
+		if (file_exists($fichier)) {
+			$exif = exif_read_data($fichier, 'EXIF');
+			log::add('diaporama', 'debug', '--> Récupération données Exif :'.json_encode($exif));
 			$intDate=0;
-			if     (strtotime($exif['FileDateTime'])) $intDate=strtotime($exif['FileDateTime']);
+			if     (($_autoriserDateFichier)&&(strtotime($exif['FileDateTime']))) $intDate=strtotime($exif['FileDateTime']);
 			elseif (strtotime($exif['DateTimeOriginal'])) $intDate=strtotime($exif['DateTimeOriginal']);
 			elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
 			elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
 			elseif (strtotime($exif['GPSDateStamp'])) $intDate=strtotime($exif['GPSDateStamp']);
-			else $intDate=$exif['FileDateTime'];
-			$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
-			if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
-			$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
-			log::add('diaporama', 'debug', '--> Date&Heure récupérés: '.date($formatDateHeure, $intDate));
+			//else $intDate=$exif['FileDateTime'];
+			if ($intDate!=0) {
+				$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
+				if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+				$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
+				log::add('diaporama', 'debug', '--> Date&Heure récupérées: '.date($formatDateHeure, $intDate));
+			}
+			else {
+				$_device->checkAndUpdateCmd('date'.$_indexPhoto, "");
+				log::add('diaporama', 'debug', '--> Date&Heure non récupérées');
+			}
+				
 			//log::add('diaporama', 'debug', '--> Orientation récupérée: '.$exif['GPSLatitude']);
 			if (config::byKey('rotate', 'diaporama', '0')) {
-				$photoaTraiter = ImageCreateFromJpeg($fichiercomplet);
+				$photoaTraiter = ImageCreateFromJpeg($fichier);
 				switch ($exif['Orientation']) {
 					case "6":
 						imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletRotate);
@@ -186,7 +203,9 @@ class diaporama extends eqLogic {
 			} else {
 			log::add('diaporama', 'debug', "--> Pas de coodonnées GPS de détectées (ou pas de clé Google Maps configurée)"); }
 			$_device->checkAndUpdateCmd('site'.$_indexPhoto, $siteGPS); 
-		}
+		} else {
+			log::add('diaporama', 'debug', "**********************Ce fichier n'existe pas : ".$fichier.'***********************************');
+		} 
 	}
 	public function DMSversDD($WouS, $arrayGPS) {
 		if ($WouS=="W" || $WouS=="S") $negatif=-1; else $negatif=1;
@@ -198,6 +217,7 @@ class diaporama extends eqLogic {
 		return intval(strstr($chaineGPS, '/', true))/intval(str_replace("/", "", strstr($chaineGPS, '/')));
 	}
 	public function refresh() {
+		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~Refresh, dossier tmp :'.jeedom::getTmpFolder('diaporama').'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		$largeurPhoto=$this->getConfiguration('largeurPhoto');
 		$hauteurPhoto=$this->getConfiguration('hauteurPhoto');
 		$arrondiPhoto=$this->getConfiguration('arrondiPhoto');
@@ -229,7 +249,20 @@ class diaporama extends eqLogic {
 				}
 			array_push($touteslesValeurs, $tirageSort);
 			$file = $diapo[$tirageSort];
-			$newfile = '/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			//if (!($file)) log::add('diaporama', 'error', "Le fichier ".$diapo[$tirageSort]." introuvable !!!");
+			
+			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
+			$dossierTMP = $dossierPlugin.'/tmp';
+			if (!file_exists($dossierTMP)) {	
+				if (mkdir($dossierTMP, 0775)) 
+					log::add('diaporama', 'debug', "Dossier temporaire ".$dossierTMP." créé avec succès");
+				else
+					log::add('diaporama', 'error', "Dossier temporaire ".$dossierTMP." non créé !!!");
+			}
+			
+			$newfile = $dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+		
+			//$newfile = '/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 			log::add('diaporama', 'debug', 'Fichier sélectionné au hasard:'.$file.' copié dans '.$this->getConfiguration('dossierSambaDiaporama').' en '.$newfile);
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
@@ -320,9 +353,21 @@ class diaporama extends eqLogic {
 				$compteurparSecurite++;
 				}
 			array_push($touteslesValeurs, $tirageSort);
-			$file = $diapo[$tirageSort];
-			$newfile = '/var/www/html/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
-			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$this->getId()."_".$tirageSort.'.jpg NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en diaporama_'.$this->getId()."_".$tirageSort.'.jpg OK');
+			$file = realpath($diapo[$tirageSort]);
+			if (!($file)) log::add('diaporama', 'error', "Le fichier ".$diapo[$tirageSort]." introuvable !!!");
+			
+			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
+			$dossierTMP = $dossierPlugin.'/tmp';
+			if (!file_exists($dossierTMP)) {	
+				if (mkdir($dossierTMP, 0775)) 
+					log::add('diaporama', 'debug', "Dossier temporaire ".$dossierTMP." créé avec succès");
+				else
+					log::add('diaporama', 'error', "Dossier temporaire ".$dossierTMP." non créé !!!");
+			}
+			
+			$newfile = $dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en '.$newfile.' NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en '.$newfile.' OK');
+			self::infosExif($tirageSort,$i,$this);
 			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
 			$this->checkAndUpdateCmd('photo'.$i, $image);			
 			}
