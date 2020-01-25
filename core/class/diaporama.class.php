@@ -238,6 +238,7 @@ class diaporama extends eqLogic {
 			//log::add('diaporama', 'debug', '**********************1***********************************');
 			$diapo=self::jpg_list($this->getConfiguration('dossierSambaDiaporama'));
 			//log::add('diaporama', 'debug', '**********************diapo:'.json_encode($diapo).'***********************************');
+			//log::add('diaporama', 'debug', '**********************diapo1:'.$diapo['filename'].'***********************************');
 			$nbPhotos=count($diapo);
 			log::add('diaporama', 'debug', '----------------------------------------------------------------------------');
 			log::add('diaporama', 'debug', 'Dans le dossier '.$dos.', il y a '.$nbPhotos.' photos');
@@ -274,7 +275,6 @@ class diaporama extends eqLogic {
 				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
 			}			
 			}
-			self::chmod777();
 		}
 		elseif ($this->getConfiguration('stockageFacebook')==1) {
 			log::add('diaporama', 'debug', '**********************Refresh Facebook***********************************');
@@ -493,7 +493,7 @@ class diaporama extends eqLogic {
 	}
 	public function preRemove () {
 	}
-	public static function lsjpg($_dir = '', $_type = 'backup') {
+	/*public static function lsjpg($_dir = '', $_type = 'backup') {
 		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.jpg', $_type);
 		$result = explode("\n", com_shell::execute($cmd));
 		$return = array();
@@ -513,13 +513,15 @@ class diaporama extends eqLogic {
 			$return[] = $file_info;
 		}
 		return array_reverse($result);
-	}
+	}*/
 	// functions de samba.repo.php repris et simplifié
 	public static function lsjpg_count($_dir = '', $_type = 'backup') {
-		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.jpg -U', $_type);
-		return count(explode("\n", com_shell::execute($cmd)))-4;
+		//$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.jpg -U', $_type);
+		//log::add('diaporama', 'debug', '>>>>>>>>>>>>>>>>>>>>>'.json_encode($file));
+		//log::add('diaporama', 'debug', '>>>>>>>>>>>>>>>>>>>>>'.json_encode($file));
+		return count(self::jpg_list($_dir,$_type));
 	}	
-	public static function jpg_list($_dir = '') {
+	/*public static function jpg_list($_dir = '') {
 		$return = array();
 		foreach (self::ls($_dir) as $file) {
 			if (stripos($file['filename'],'.jpg') !== false) {
@@ -527,36 +529,27 @@ class diaporama extends eqLogic {
 			}
 		}
 		return $return;
-	}	
+	}	*/
 	public static function downloadCore($_dir= '', $_fileOrigine, $_fileDestination) {
-		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';get '.$_fileOrigine.' '.$_fileDestination, 'backup');
+		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';get \"'.$_fileOrigine.'\" '.$_fileDestination, 'backup');
 		com_shell::execute($cmd);
 		return;
 	}
-	public static function chmod777() {
-		com_shell::execute(system::getCmdSudo() . 'chmod 777 -R /var/www/html/tmp/' );
-		//return;
-	}
-	public static function ls($_dir = '', $_type = 'backup') {
-		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.JPG -U', $_type);
+	public static function jpg_list($_dir = '', $_type = 'backup') {
+		$cmd = repo_samba::makeSambaCommand('cd ' . $_dir . ';ls *.* -U', $_type);
 		$result = explode("\n", com_shell::execute($cmd));
 		$return = array();
-		for ($i = 2; $i < count($result) - 2; $i++) {
-			$line = array();
-			foreach (explode(" ", $result[$i]) as $value) {
-				if (trim($value) == '') {
-					continue;
-				}
-				$line[] = $value;
-			}
-			$file_info = array();
-			$file_info['filename'] = $line[0];
-			$file_info['size'] = $line[2];
-			$file_info['datetime'] = date('Y-m-d H:i:s', strtotime($line[5] . ' ' . $line[4] . ' ' . $line[7] . ' ' . $line[6]));
-			$return[] = $file_info;
+		for ($i = 0; $i < count($result) - 2; $i++) {
+			$LigneATraiter=substr($result[$i],-1*(strlen($result[$i])-2));
+			if (!(stristr($LigneATraiter, '.jpg'))) continue; // on enlève tout ce qui n'est pas un fichier (ou un dossier)
+			$fichierFind=stristr($LigneATraiter, '.jpg', true).substr(stristr($LigneATraiter, '.jpg'),0,4);
+			//log::add('diaporama', 'debug', 'Fichier JPG trouvé >>'.$fichierFind.'<<');
+			$return[] = $fichierFind;
 		}
 		//usort($return, 'repo_samba::sortByDatetime');
-		return array_reverse($return);
+		//log::add('diaporama', 'debug', '>>>>>>>>>>>>>>>>>>>>>return:'.json_encode($return));
+		//return array_reverse($return);
+		return $return;
 	}	
 	public static function Utf8_ansi($valor='') {
 		$utf8_ansi2 = array(
