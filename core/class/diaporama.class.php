@@ -172,8 +172,9 @@ class diaporama extends eqLogic {
 			elseif (strtotime($exif['GPSDateStamp'])) $intDate=strtotime($exif['GPSDateStamp']);
 			//else $intDate=$exif['FileDateTime'];
 			if ($intDate!=0) {
-				$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
-				if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+				$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', "d-m-Y H:i:s");
+				if (($formatDateHeure =="") || ($formatDateHeure =="0")) $formatDateHeure="d-m-Y H:i:s"; // visiblement ça met 0 si non rempli
+				//log::add('diaporama', 'debug', '--> formatDateHeure: '.$formatDateHeure);
 				$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
 				log::add('diaporama', 'debug', '--> Date&Heure récupérées: '.date($formatDateHeure, $intDate));
 			}
