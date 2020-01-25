@@ -78,8 +78,8 @@ class diaporama extends eqLogic {
 		//event::add('jeedom::alert', array('level' => 'warning', 'page' => 'diaporama', 'message' => __('dossiertmp:'.sys_get_temp_dir().' ', __FILE__)));
 			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
 			$dossierTMP = $dossierPlugin.'/tmp';
-			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
-			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
 		
 		if (!file_exists($fichier)) {	
 			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
@@ -144,13 +144,155 @@ class diaporama extends eqLogic {
 		}
 		return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$source.'" alt="image">';
 	}
+	
+	public function redimensionne_Photo_ET_Exif($tirageSort,$maxWidth,$maxHeight, $arrondiPhoto, $centrerLargeur, $_indexPhoto, $_device, $qualite=-1, $_autoriserDateFichier=false)  {
+
+		//event::add('jeedom::alert', array('level' => 'warning', 'page' => 'diaporama', 'message' => __('dossiertmp:'.sys_get_temp_dir().' ', __FILE__)));
+			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
+			$dossierTMP = $dossierPlugin.'/tmp';
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			$fichiercompletResize=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
+
+		/*
+		if (!file_exists($fichier)) {	
+			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
+		}*/
+		if (file_exists($fichier)) {
+		//log::add('diaporama', 'debug', '-->existe : $fichier :'.$$fichier);
+			$exif = exif_read_data($fichier, 'EXIF');
+			log::add('diaporama', 'debug', '--> Récupération données Exif :'.json_encode($exif));
+			$intDate=0;
+			// Date
+			if     (($_autoriserDateFichier)&&(strtotime($exif['FileDateTime']))) $intDate=strtotime($exif['FileDateTime']);
+			elseif (strtotime($exif['DateTimeOriginal'])) $intDate=strtotime($exif['DateTimeOriginal']);
+			elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
+			elseif (strtotime($exif['DateTimeDigitized'])) $intDate=strtotime($exif['DateTimeDigitized']);
+			elseif (strtotime($exif['GPSDateStamp'])) $intDate=strtotime($exif['GPSDateStamp']);
+			//else $intDate=$exif['FileDateTime'];
+			if ($intDate!=0) {
+				$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
+				if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+				$_device->checkAndUpdateCmd('date'.$_indexPhoto, date($formatDateHeure, $intDate));
+				log::add('diaporama', 'debug', '--> Date&Heure récupérées: '.date($formatDateHeure, $intDate));
+			}
+			else {
+				$_device->checkAndUpdateCmd('date'.$_indexPhoto, "");
+				log::add('diaporama', 'debug', '--> Date&Heure non récupérées');
+			}
+			// Calcul dimension 
+			$imageinfo= getimagesize("$fichier");
+			$iw=$imageinfo[0];
+			$ih=$imageinfo[1];
+			# Paramètres : Largeur et Hauteur souhaiter $maxWidth, $maxHeight
+			# Calcul des rapport de Largeur et de Hauteur
+			$widthscale = $iw/$maxWidth;
+			$heightscale = $ih/$maxHeight;
+			$rapport = $ih/$widthscale;
+			# Calul des rapports Largeur et Hauteur à afficher
+			if($rapport < $maxHeight)
+				{$nwidth = $maxWidth;}
+			 else
+				{$nwidth = round($iw/$heightscale);}
+			 if($rapport < $maxHeight)
+				{$nheight = $rapport;}
+			 else
+				{$nheight = $maxHeight;}
+			
+			
+			// Création de la ressource pour la nouvelle image
+			$dest = imagecreatetruecolor($nwidth, $nheight);
+			$photoaTraiter = ImageCreateFromJpeg($fichier);
+			
+			// On Retourne si besoin
+			if ((!empty($exif['Orientation'])) && (config::byKey('rotate', 'diaporama', '0'))) {
+                switch($exif['Orientation']) {
+                case 8:
+                    $photoaTraiter = imagerotate($photoaTraiter,90,0);
+					$tmp=$nwidth;
+					$nwidth=$nheight;
+					$nheight=$tmp;
+                    break;
+                case 3:
+                    $photoaTraiter = imagerotate($photoaTraiter,180,0);
+                    break;
+                case 6:
+                    $photoaTraiter = imagerotate($photoaTraiter,-90,0);
+					$tmp=$nwidth;
+					$nwidth=$nheight;
+					$nheight=$tmp;                    
+					break;
+                }
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
+
+            } 
+
+			
+			
+			// Création de l'image redimentionnée
+			if(imagecopyresampled($dest, $photoaTraiter, 0, 0, 0, 0, $nwidth, $nheight, $iw, $ih)) {	
+
+					imagejpeg($photoaTraiter,$fichiercompletResize,$qualite);
+					log::add('diaporama', 'debug', '--> Image '.$iw.'x'.$ih.' redimensée en '.$nwidth.'x'.$nheight.' avec qualité '.$qualite.'/100');
+
+			} else {
+			log::add('diaporama', 'debug', "--> Souci lors du Resize"); }
+
+			// Localisation	
+			$siteGPS="";
+			$APIGoogleMaps = config::byKey('APIGoogleMaps', 'diaporama', '0');
+			if ($APIGoogleMaps !="" && is_array($exif['GPSLatitude'])) {
+				$requete="https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=".$APIGoogleMaps;
+				log::add('diaporama', 'debug', '--> Requete Web: '."https://maps.googleapis.com/maps/api/geocode/json?latlng=".self::DMSversDD($exif['GPSLatitudeRef'],$exif['GPSLatitude']).",".self::DMSversDD($exif['GPSLongitudeRef'],$exif['GPSLongitude'])."&key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+				$recupereJson=file_get_contents($requete);
+				$json = json_decode($recupereJson,true);
+				if ($json['error_message'] != "")
+					$siteGPS=$json['error_message'];
+				else
+					$siteGPS=strstr($json['plus_code']['compound_code'], ' ');
+				log::add('diaporama', 'debug', '--> Adresse trouvée: '.$siteGPS);
+			} else {
+			log::add('diaporama', 'debug', "--> Pas de coodonnées GPS de détectées (ou pas de clé Google Maps configurée)"); }
+			$_device->checkAndUpdateCmd('site'.$_indexPhoto, $siteGPS); 		
+		
+		
+		
+		
+
+			
+			$decalerAdroite="";
+			if ($centrerLargeur) {
+				$decalage=round(($maxWidth-$nwidth)/2);
+				if ($decalage > 1)
+					$decalerAdroite="position: relative; left: ".$decalage."px;";
+			}
+			log::add('diaporama', 'debug', '--> Affichage de  '.$fichierpourHTML);
+			
+			try {
+			ImageDestroy($fichier); 
+			ImageDestroy($photoaTraiter); 
+			unlink($fichier);	
+			}
+			catch(Exception $exc) {
+			log::add('diaporama', 'debug', "**********************Erreur lors de la suppression de ".$fichier.'***********************************');
+			}		
+
+			return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichierpourHTML.'" alt="image">';
+		} else {
+			log::add('diaporama', 'debug', "**********************Ce fichier n'existe pas : ".$fichier.'***********************************');
+			return "Le fichier $fichier n'existe pas.";
+		}    
+	}
+	
+	/*
 	public function infosExif($tirageSort, $_indexPhoto, $_device, $_autoriserDateFichier=false)  {
 		
 			$dossierPlugin=realpath(dirname(__FILE__).'/../../');
 			$dossierTMP = $dossierPlugin.'/tmp';
 			$fichier=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
-			$fichiercompletRotate=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
-			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_rotate.jpg';
+			$fichiercompletResize=$dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
+			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
 
 		if (file_exists($fichier)) {
 			$exif = exif_read_data($fichier, 'EXIF');
@@ -178,13 +320,13 @@ class diaporama extends eqLogic {
 				$photoaTraiter = ImageCreateFromJpeg($fichier);
 				switch ($exif['Orientation']) {
 					case "6":
-						imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletRotate);
+						imagejpeg(imagerotate($photoaTraiter, 270, 0),$fichiercompletResize);
 						break;
 					case "8":
-						imagejpeg(imagerotate($photoaTraiter, 90, 0),$fichiercompletRotate);
+						imagejpeg(imagerotate($photoaTraiter, 90, 0),$fichiercompletResize);
 						break;
 					case "3":
-						imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletRotate);
+						imagejpeg(imagerotate($photoaTraiter, 180, 0),$fichiercompletResize);
 						break;
 				}	
 			}
@@ -206,7 +348,7 @@ class diaporama extends eqLogic {
 		} else {
 			log::add('diaporama', 'debug', "**********************Ce fichier n'existe pas : ".$fichier.'***********************************');
 		} 
-	}
+	}*/
 	public function DMSversDD($WouS, $arrayGPS) {
 		if ($WouS=="W" || $WouS=="S") $negatif=-1; else $negatif=1;
 		$nombre=(floatval(str_replace("/1", "", self::recupGPS($arrayGPS[0]))))+((floatval(str_replace("/1", "", self::recupGPS($arrayGPS[2]))) /60 + floatval(str_replace("/1", "", self::recupGPS($arrayGPS[1]))))/60);
@@ -221,9 +363,11 @@ class diaporama extends eqLogic {
 		$largeurPhoto=$this->getConfiguration('largeurPhoto');
 		$hauteurPhoto=$this->getConfiguration('hauteurPhoto');
 		$arrondiPhoto=$this->getConfiguration('arrondiPhoto');
+		$qualitePhoto=$this->getConfiguration('qualitePhoto');
 		if ($largeurPhoto =="") $largeurPhoto="250";
 		if ($hauteurPhoto =="") $hauteurPhoto="250";		
 		if ($arrondiPhoto =="") $arrondiPhoto="30%";		
+		if ($qualitePhoto =="") $arrondiPhoto="-1";		
 		$tirageSort="999";//999 pour boucler dans tirageSort
 		$touteslesValeurs= array($tirageSort);
 		$nbPhotosaGenerer=$this->getConfiguration('nbPhotosaGenerer');
@@ -267,8 +411,7 @@ class diaporama extends eqLogic {
 			log::add('diaporama', 'debug', 'Fichier sélectionné au hasard:'.$file.' copié dans '.$this->getConfiguration('dossierSambaDiaporama').' en '.$newfile);
 			try {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
-				self::infosExif($tirageSort,$i,$this);
-				$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
+				$image=self::redimensionne_Photo_ET_Exif($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur,$i,$this, $qualitePhoto);
 				$this->checkAndUpdateCmd('photo'.$i, $image);	
 			}
 			catch(Exception $exc) {
@@ -367,8 +510,7 @@ class diaporama extends eqLogic {
 			
 			$newfile = $dossierTMP.'/diaporama_'.$this->getId()."_".$tirageSort.'.jpg';
 			if (!copy($file, $newfile)) log::add('diaporama', 'debug', 'Copie image '.$file.' en '.$newfile.' NOK'); else log::add('diaporama', 'debug', 'Copie image '.$file.' en '.$newfile.' OK');
-			self::infosExif($tirageSort,$i,$this);
-			$image=self::redimensionne_Photo($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur);
+			$image=self::redimensionne_Photo_ET_Exif($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur,$i,$this, $qualitePhoto);
 			$this->checkAndUpdateCmd('photo'.$i, $image);			
 			}
 		}
@@ -551,6 +693,132 @@ class diaporama extends eqLogic {
 		//return array_reverse($return);
 		return $return;
 	}	
+	/**
+	 * Fonction qui permet de redimensionner une image en conservant les proportions
+	 * @param  string  $image_path Chemin de l'image
+	 * @param  string  $image_dest Chemin de destination de l'image redimentionnée (si vide remplace l'image envoyée)
+	 * @param  integer $max_size   Taille maximale en pixels
+	 * @param  integer $qualite    Qualité de l'image entre 0 et 100
+	 * @param  string  $type       'auto' => prend le coté le plus grand
+	 *                             'width' => prend la largeur en référence
+	 *                             'height' => prend la hauteur en référence
+	 * @return string              'success' => redimentionnement effectué avec succès
+	 *                             'wrong_path' => le chemin du fichier est incorrect
+	 *                             'no_img' => le fichier n'est pas une image
+	 *                             'resize_error' => le redimensionnement a échoué
+	 */
+	function resize_img($image_path,$image_dest,$max_size = 300,$qualite = 100,$type = 'auto'){
+
+	  // Vérification que le fichier existe
+	  if(!file_exists($image_path)):
+		return 'wrong_path';
+	  endif;
+
+	  if($image_dest == ""):
+		$image_dest = $image_path;
+	  endif;
+	  // Extensions et mimes autorisés
+	  $extensions = array('jpg','jpeg','png','gif');
+	  $mimes = array('image/jpeg','image/gif','image/png');
+
+	  // Récupération de l'extension de l'image
+	  $tab_ext = explode('.', $image_path);
+	  $extension  = strtolower($tab_ext[count($tab_ext)-1]);
+
+	  // Récupération des informations de l'image
+	  $image_data = getimagesize($image_path);
+
+	  // Si c'est une image envoyé alors son extension est .tmp et on doit d'abord la copier avant de la redimentionner
+	  if($extension == 'tmp' && in_array($image_data['mime'],$mimes)):
+		copy($image_path,$image_dest);
+		$image_path = $image_dest;
+
+		$tab_ext = explode('.', $image_path);
+		$extension  = strtolower($tab_ext[count($tab_ext)-1]);
+	  endif;
+
+	  // Test si l'extension est autorisée
+	  if (in_array($extension,$extensions) && in_array($image_data['mime'],$mimes)):
+		
+		// On stocke les dimensions dans des variables
+		$img_width = $image_data[0];
+		$img_height = $image_data[1];
+
+		// On vérifie quel coté est le plus grand
+		if($img_width >= $img_height && $type != "height"):
+
+		  // Calcul des nouvelles dimensions à partir de la largeur
+		  if($max_size >= $img_width):
+			return 'no_need_to_resize';
+		  endif;
+
+		  $new_width = $max_size;
+		  $reduction = ( ($new_width * 100) / $img_width );
+		  $new_height = round(( ($img_height * $reduction )/100 ),0);
+
+		else:
+
+		  // Calcul des nouvelles dimensions à partir de la hauteur
+		  if($max_size >= $img_height):
+			return 'no_need_to_resize';
+		  endif;
+
+		  $new_height = $max_size;
+		  $reduction = ( ($new_height * 100) / $img_height );
+		  $new_width = round(( ($img_width * $reduction )/100 ),0);
+
+		endif;
+
+		// Création de la ressource pour la nouvelle image
+		$dest = imagecreatetruecolor($new_width, $new_height);
+
+		// En fonction de l'extension on prépare l'iamge
+		switch($extension){
+		  case 'jpg':
+		  case 'jpeg':
+			$src = imagecreatefromjpeg($image_path); // Pour les jpg et jpeg
+		  break;
+
+		  case 'png':
+			$src = imagecreatefrompng($image_path); // Pour les png
+		  break;
+
+		  case 'gif':
+			$src = imagecreatefromgif($image_path); // Pour les gif
+		  break;
+		}
+
+		// Création de l'image redimentionnée
+		if(imagecopyresampled($dest, $src, 0, 0, 0, 0, $new_width, $new_height, $img_width, $img_height)):
+
+		  // On remplace l'image en fonction de l'extension
+		  switch($extension){
+			case 'jpg':
+			case 'jpeg':
+			  imagejpeg($dest , $image_dest, $qualite); // Pour les jpg et jpeg
+			break;
+
+			case 'png':
+			  imagepng($dest , $image_dest, $qualite); // Pour les png
+			break;
+
+			case 'gif':
+			  imagegif($dest , $image_dest, $qualite); // Pour les gif
+			break;
+		  }
+
+		  return 'success';
+		  
+		else:
+		  return 'resize_error';
+		endif;
+
+	  else:
+		return 'no_img';
+	  endif;
+	}	
+	
+	
 	public static function Utf8_ansi($valor='') {
 		$utf8_ansi2 = array(
 		"\u00c0" =>"À",
