@@ -383,7 +383,7 @@ class diaporama extends eqLogic {
 		$centrerLargeur=$this->getConfiguration('centrerLargeur');
 		//log::add('diaporama', 'debug', '~~~~~~~~~~~~~~~~~~~~~~$centrerLargeur:'.$centrerLargeur.'~~~~~~~~~~~~~~~~~~~~~~~~~');
 		$formatDateHeure = config::byKey('formatDateHeure', 'diaporama', '0');
-		if ($formatDateHeure =="") $formatDateHeure="d-m-Y H:i:s";
+		if (($formatDateHeure =="") || ($formatDateHeure =="0")) $formatDateHeure="d-m-Y H:i:s"; // visiblement ça met 0 si non rempli
 		if ($nbPhotosaGenerer<1 || $nbPhotosaGenerer>9) $nbPhotosaGenerer=2;
 		if ($this->getConfiguration('stockageSamba')==1) {
 			$sambaShare	= config::byKey('samba::backup::share')	;
