@@ -225,7 +225,6 @@ class diaporama extends eqLogic {
 					$nheight=$tmp;                    
 					break;
                 }
-			$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
 
             } 
 
@@ -268,17 +267,26 @@ class diaporama extends eqLogic {
 				if ($decalage > 1)
 					$decalerAdroite="position: relative; left: ".$decalage."px;";
 			}
-			log::add('diaporama', 'debug', '--> Affichage de  '.$fichierpourHTML);
 			
 			try {
+			
+			if (file_exists($fichiercompletResize)) {
+				$fichierpourHTML='plugins/diaporama/tmp/diaporama_'.$this->getId()."_".$tirageSort.'_resize.jpg';
+				unlink($fichier);
+			//log::add('diaporama', 'debug', "**********************Le fichier resize a été généré ".$fichiercompletResize.'***********************************');
+			}
+			//else 
+			//log::add('diaporama', 'debug', "**********************Le fichier resize n'a pas été généré ".$fichiercompletResize.'***********************************');
+	
 			ImageDestroy($fichier); 
 			ImageDestroy($photoaTraiter); 
-			unlink($fichier);	
 			}
 			catch(Exception $exc) {
 			log::add('diaporama', 'debug', "**********************Erreur lors de la suppression de ".$fichier.'***********************************');
-			}		
-
+			}
+			
+			//log::add('diaporama', 'debug', "**********************Return renvoi le fichier :  ".$fichierpourHTML.'***********************************');
+			log::add('diaporama', 'debug', '--> Affichage de  '.$fichierpourHTML);
 			return '<img height="'.$nheight.'" width="'.$nwidth.'" class="rien" style="'.$decalerAdroite.'height: '.$nheight.';width: '.$nwidth.';border-radius: '.$arrondiPhoto.';" src="'.$fichierpourHTML.'" alt="image">';
 		} else {
 			log::add('diaporama', 'debug', "**********************Ce fichier n'existe pas : ".$fichier.'***********************************');
