@@ -4,7 +4,7 @@
 	"description" : "Diaporama",
 	"licence" : "AGPL",
 	"author" : "Sigalou",
-	"require" : "3.3.24",
+	"require" : "4.0.0",
 	"version": "0.0.1",
 	"changelog" : "http://sigalou-domotique.fr/diaporama/81-plugin-diaporama-changelog-todolist",
 	"forum_link" : "https://community.jeedom.com/tags/plugin-alexaapi",
