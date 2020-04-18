@@ -955,7 +955,11 @@ class diaporama extends eqLogic {
 			$requete="https://graph.facebook.com/v5.0/me?access_token=".$TokenFacebook;
 			log::add('diaporama', 'debug', 'On teste le compte Facebook avec la requète : '.$requete.'***********************************');
 			$recupereJson=file_get_contents($requete);
-			if(empty($recupereJson)) {log::add('diaporama', 'debug', 'vide');}
+			if(empty($recupereJson)) {
+				log::add('diaporama', 'debug', 'Facebook : SOUCI de Token !!! il faut le REGENERER');
+				$this->setConfiguration('facebookEtat', "nok");
+				$this->setConfiguration('cheminDiaporamaComplet', "<B>Facebook : SOUCI de Token !!! il faut le REGENERER</B>"); 
+				}
 			if ($recupereJson=file_get_contents($requete, true)) {
 				$json = json_decode($recupereJson,true);
 				$this->setConfiguration('cheminDiaporamaValide', "ok");
