@@ -4,7 +4,7 @@ class diaporama extends eqLogic {
 	public static function cron($_eqlogic_id = null) {
 		$eqLogics = ($_eqlogic_id !== null) ? array(eqLogic::byId($_eqlogic_id)) : eqLogic::byType('diaporama', true);
 		foreach ($eqLogics as $diaporama) {
-			$autorefresh = $diaporama->getConfiguration('autorefresh','00 22 01 01 3 2020');
+			$autorefresh = checkAndFixCron($diaporama->getConfiguration('autorefresh','00 22 01 01 3'));
 			if ($autorefresh != '') {
 				try {
 					//log::add('diaporama', 'debug', __('Expression cron valide pour ', __FILE__) . $diaporama->getHumanName() . ' : ' . $autorefresh);
