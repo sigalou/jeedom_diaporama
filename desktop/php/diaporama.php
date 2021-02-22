@@ -184,7 +184,14 @@ foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value)
                   <div class="col-sm-2">
                     <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="arrondiPhoto" placeholder="{{30%}}"/>
                   </div>
-                </div>				<div class="form-group">
+                </div>				
+                <div class="form-group">
+                  <label class="col-sm-4 control-label">{{Qualité des images (entre 0 et 100)}}</label>
+                  <div class="col-sm-2">
+                    <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="qualitePhoto" placeholder="{{75}}"/>
+                  </div>
+                </div>					
+				<div class="form-group">
                 <label class="col-sm-4 control-label">{{Nombre de photos à générer<br>(2 par défaut)}}</label>
                 <div class="col-sm-6">
                     <select class="eqLogicAttr form-control" data-l1key='configuration' data-l2key='nbPhotosaGenerer'>
