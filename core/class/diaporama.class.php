@@ -422,6 +422,15 @@ class diaporama extends eqLogic {
 				self::downloadCore($this->getConfiguration('dossierSambaDiaporama'), $file, $newfile);
 				$image=self::redimensionne_Photo_ET_Exif($tirageSort,$largeurPhoto,$hauteurPhoto, $arrondiPhoto, $centrerLargeur,$i,$this, $qualitePhoto);
 				$this->checkAndUpdateCmd('photo'.$i, $image);	
+				$NomduFichier=str_replace(".png", "", $file);
+				$NomduFichier=str_replace(".PNG", "", $NomduFichier);
+				$NomduFichier=str_replace(".jpg", "", $NomduFichier);
+				$NomduFichier=str_replace(".JPG", "", $NomduFichier);
+				$NomduFichier=str_replace(".gif", "", $NomduFichier);
+				$NomduFichier=str_replace(".GIF", "", $NomduFichier);
+				$NomduFichier=str_replace(".jpeg", "", $NomduFichier);
+				$NomduFichier=str_replace(".JPEG", "", $NomduFichier);
+				$this->checkAndUpdateCmd('fichier'.$i, $NomduFichier);	
 			}
 			catch(Exception $exc) {
 				log::add('diaporama', 'error', __('Erreur pour ', __FILE__) . ' : ' . $exc->getMessage());
@@ -614,8 +623,22 @@ class diaporama extends eqLogic {
 			//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
 			$cmd->setDisplay('title_disable', 1);
 		}
-		$cmd->save();						
-	}			
+		$cmd->save();
+		
+		$cmd = $this->getCmd(null, 'fichier'.$i);
+		if (!is_object($cmd)) {
+			$cmd = new diaporamaCmd();
+			$cmd->setType('info');
+			$cmd->setLogicalId('fichier'.$i);
+			$cmd->setSubType('string');
+			$cmd->setEqLogic_id($this->getId());
+			$cmd->setName('Fichier '.$i);
+			$cmd->setIsVisible(1);
+			$cmd->setOrder($i*6+6);
+			//$cmd->setDisplay('icon', '<i class="loisir-musical7"></i>');
+			$cmd->setDisplay('title_disable', 1);
+		}
+		$cmd->save();	}			
 	//Commande Refresh
 	$createRefreshCmd = true;
 	$refresh = $this->getCmd(null, 'refresh');
