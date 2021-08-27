@@ -1,7 +1,7 @@
 {
 	"id" : "diaporama",
 	"name" : "Diaporama",
-  "description": "Afficher sur un de vos écrans Domotique un diaporama de vos photos préférées. Possible en plein écran ou dans un cadre. 400% WAF, adoré de Madame et des enfants !! Les photos peuvent être stockées sur la machine de Jeedom ou sur une autre machine (via Samba). Il est également possible de tout simplement afficher les photos de votre compte Facebook, le plugin se charge d'aller les récupérer et les faire défiler.",
+  "description": "Afficher sur un de vos écrans domotique un diaporama de vos photos préférées. Possible en plein écran ou dans un cadre. 400% WAF, adoré de Madame et des enfants !! Les photos peuvent être stockées sur la machine de Jeedom ou sur une autre machine (via Samba). Il est également possible de tout simplement afficher les photos de votre compte Facebook, le plugin se charge d'aller les récupérer et les faire défiler.",
 	"licence" : "AGPL",
 	"author" : "Sigalou",
 	"require" : "3.3.24",
